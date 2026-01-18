@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Award, Download, X, Share2 } from "lucide-react";
+import { Award, Download, Share2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,

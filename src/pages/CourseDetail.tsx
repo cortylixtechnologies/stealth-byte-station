@@ -58,11 +58,6 @@ interface Lesson {
   order_index: number;
 }
 
-interface LessonProgress {
-  lesson_id: string;
-  is_completed: boolean;
-}
-
 interface Certificate {
   id: string;
   certificate_number: string;
