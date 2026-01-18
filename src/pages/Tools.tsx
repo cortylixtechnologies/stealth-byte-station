@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Shield,
@@ -13,6 +13,7 @@ import {
   Scan,
   FileSearch,
   Network,
+  Loader2,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -21,91 +22,71 @@ import Footer from "@/components/Footer";
 import SectionHeader from "@/components/SectionHeader";
 import ToolCard from "@/components/ToolCard";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import { supabase } from "@/integrations/supabase/client";
 
-const tools = [
-  {
-    name: "Port Scanner",
-    description: "Scan networks for open ports and potential vulnerabilities.",
-    category: "free" as const,
-    icon: <Network className="w-6 h-6" />,
-  },
-  {
-    name: "Password Strength Checker",
-    description: "Analyze password strength and get security recommendations.",
-    category: "free" as const,
-    icon: <Key className="w-6 h-6" />,
-  },
-  {
-    name: "SQL Injection Tester",
-    description: "Test web applications for SQL injection vulnerabilities.",
-    category: "paid" as const,
-    icon: <Database className="w-6 h-6" />,
-  },
-  {
-    name: "WiFi Security Analyzer",
-    description: "Analyze WiFi network security and identify weaknesses.",
-    category: "paid" as const,
-    icon: <Wifi className="w-6 h-6" />,
-  },
-  {
-    name: "Malware Scanner",
-    description: "Scan files and URLs for malware and potential threats.",
-    category: "free" as const,
-    icon: <Bug className="w-6 h-6" />,
-  },
-  {
-    name: "Vulnerability Scanner",
-    description: "Comprehensive vulnerability assessment for web applications.",
-    category: "paid" as const,
-    icon: <Scan className="w-6 h-6" />,
-  },
-  {
-    name: "SSL Certificate Checker",
-    description: "Verify SSL certificates and check for security issues.",
-    category: "free" as const,
-    icon: <Shield className="w-6 h-6" />,
-  },
-  {
-    name: "DNS Lookup Tool",
-    description: "Perform DNS queries and analyze domain configurations.",
-    category: "free" as const,
-    icon: <Globe className="w-6 h-6" />,
-  },
-  {
-    name: "Packet Analyzer",
-    description: "Capture and analyze network traffic in real-time.",
-    category: "paid" as const,
-    icon: <FileSearch className="w-6 h-6" />,
-  },
-  {
-    name: "Hash Generator",
-    description: "Generate and verify cryptographic hashes (MD5, SHA, etc.).",
-    category: "free" as const,
-    icon: <Lock className="w-6 h-6" />,
-  },
-  {
-    name: "XSS Scanner",
-    description: "Detect cross-site scripting vulnerabilities in applications.",
-    category: "paid" as const,
-    icon: <Terminal className="w-6 h-6" />,
-  },
-  {
-    name: "Subdomain Finder",
-    description: "Discover subdomains associated with a target domain.",
-    category: "free" as const,
-    icon: <Search className="w-6 h-6" />,
-  },
-];
+interface Tool {
+  id: string;
+  name: string;
+  description: string | null;
+  category: string;
+  icon: string | null;
+  price: number | null;
+  url: string | null;
+}
+
+const getIconComponent = (iconName: string | null) => {
+  const icons: { [key: string]: React.ReactNode } = {
+    network: <Network className="w-6 h-6" />,
+    key: <Key className="w-6 h-6" />,
+    database: <Database className="w-6 h-6" />,
+    wifi: <Wifi className="w-6 h-6" />,
+    bug: <Bug className="w-6 h-6" />,
+    scan: <Scan className="w-6 h-6" />,
+    shield: <Shield className="w-6 h-6" />,
+    globe: <Globe className="w-6 h-6" />,
+    filesearch: <FileSearch className="w-6 h-6" />,
+    lock: <Lock className="w-6 h-6" />,
+    terminal: <Terminal className="w-6 h-6" />,
+    search: <Search className="w-6 h-6" />,
+  };
+  return icons[iconName?.toLowerCase() || ""] || <Terminal className="w-6 h-6" />;
+};
 
 const Tools = () => {
+  const [tools, setTools] = useState<Tool[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "free" | "paid">("all");
   const [searchQuery, setSearchQuery] = useState("");
 
+  useEffect(() => {
+    fetchTools();
+  }, []);
+
+  const fetchTools = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("tools")
+        .select("*")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setTools(data || []);
+    } catch (error) {
+      console.error("Error fetching tools:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const filteredTools = tools.filter((tool) => {
-    const matchesFilter = filter === "all" || tool.category === filter;
+    const matchesFilter =
+      filter === "all" ||
+      (filter === "free" && tool.category === "free") ||
+      (filter === "paid" && tool.category === "paid");
     const matchesSearch =
       tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      tool.description.toLowerCase().includes(searchQuery.toLowerCase());
+      (tool.description?.toLowerCase() || "").includes(searchQuery.toLowerCase());
     return matchesFilter && matchesSearch;
   });
 
@@ -175,20 +156,31 @@ const Tools = () => {
           </motion.div>
 
           {/* Tools Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredTools.map((tool, index) => (
-              <motion.div
-                key={tool.name}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <ToolCard {...tool} />
-              </motion.div>
-            ))}
-          </div>
+          {loading ? (
+            <div className="flex justify-center py-16">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {filteredTools.map((tool, index) => (
+                <motion.div
+                  key={tool.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <ToolCard
+                    name={tool.name}
+                    description={tool.description || ""}
+                    category={tool.category as "free" | "paid"}
+                    icon={getIconComponent(tool.icon)}
+                  />
+                </motion.div>
+              ))}
+            </div>
+          )}
 
-          {filteredTools.length === 0 && (
+          {!loading && filteredTools.length === 0 && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}

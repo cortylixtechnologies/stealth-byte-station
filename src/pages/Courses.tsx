@@ -1,18 +1,32 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Shield, Code, Palette, ArrowRight } from "lucide-react";
+import { Shield, Code, Palette, ArrowRight, Loader2, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SectionHeader from "@/components/SectionHeader";
 import CourseCard from "@/components/CourseCard";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import { supabase } from "@/integrations/supabase/client";
 
-type CategoryType = "all" | "cybersecurity" | "programming" | "design";
+interface Course {
+  id: string;
+  title: string;
+  description: string | null;
+  category: string;
+  level: string;
+  duration: string | null;
+  lessons_count: number | null;
+  image_url: string | null;
+  price: number | null;
+  is_free: boolean;
+}
+
+type CategoryType = "all" | "cyber-security" | "programming" | "design";
 
 const courseCategories = [
   {
-    id: "cybersecurity" as const,
+    id: "cyber-security" as const,
     name: "Cyber Security",
     icon: <Shield className="w-8 h-8" />,
     description: "Master ethical hacking, penetration testing, and security analysis.",
@@ -34,113 +48,31 @@ const courseCategories = [
   },
 ];
 
-const courses = {
-  cybersecurity: [
-    {
-      title: "Ethical Hacking Fundamentals",
-      description: "Learn the basics of ethical hacking and penetration testing methodology.",
-      level: "Beginner" as const,
-      duration: "20 hours",
-      students: 12500,
-      image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800",
-    },
-    {
-      title: "Advanced Penetration Testing",
-      description: "Master advanced exploitation techniques and red team operations.",
-      level: "Advanced" as const,
-      duration: "40 hours",
-      students: 5200,
-      image: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800",
-    },
-    {
-      title: "Web Application Security",
-      description: "Identify and exploit vulnerabilities in modern web applications.",
-      level: "Intermediate" as const,
-      duration: "30 hours",
-      students: 8900,
-      image: "https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?w=800",
-    },
-    {
-      title: "Network Security Essentials",
-      description: "Understand network protocols and security mechanisms.",
-      level: "Beginner" as const,
-      duration: "25 hours",
-      students: 15000,
-      image: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800",
-    },
-  ],
-  programming: [
-    {
-      title: "Python for Security",
-      description: "Master Python programming for cybersecurity applications.",
-      level: "Beginner" as const,
-      duration: "35 hours",
-      students: 20000,
-      image: "https://images.unsplash.com/photo-1526379095098-d400fd0bf935?w=800",
-    },
-    {
-      title: "Bash Scripting Mastery",
-      description: "Automate security tasks with powerful shell scripting.",
-      level: "Intermediate" as const,
-      duration: "20 hours",
-      students: 7500,
-      image: "https://images.unsplash.com/photo-1629654297299-c8506221ca97?w=800",
-    },
-    {
-      title: "JavaScript Security",
-      description: "Secure coding practices for JavaScript developers.",
-      level: "Intermediate" as const,
-      duration: "25 hours",
-      students: 9800,
-      image: "https://images.unsplash.com/photo-1627398242454-45a1465c2479?w=800",
-    },
-    {
-      title: "C/C++ for Exploits",
-      description: "Low-level programming for vulnerability research and exploit development.",
-      level: "Advanced" as const,
-      duration: "50 hours",
-      students: 3200,
-      image: "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?w=800",
-    },
-  ],
-  design: [
-    {
-      title: "Security Awareness Design",
-      description: "Create compelling visuals for security awareness campaigns.",
-      level: "Beginner" as const,
-      duration: "15 hours",
-      students: 4500,
-      image: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800",
-    },
-    {
-      title: "UI/UX for Security Tools",
-      description: "Design intuitive interfaces for security applications.",
-      level: "Intermediate" as const,
-      duration: "25 hours",
-      students: 3800,
-      image: "https://images.unsplash.com/photo-1558655146-9f40138edfeb?w=800",
-    },
-    {
-      title: "Brand Identity for Tech",
-      description: "Build powerful brand identities for cybersecurity companies.",
-      level: "Intermediate" as const,
-      duration: "20 hours",
-      students: 2900,
-      image: "https://images.unsplash.com/photo-1626785774573-4b799315345d?w=800",
-    },
-    {
-      title: "Motion Graphics Basics",
-      description: "Create animated content for security presentations and videos.",
-      level: "Beginner" as const,
-      duration: "18 hours",
-      students: 5600,
-      image: "https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=800",
-    },
-  ],
-};
-
 const Courses = () => {
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<CategoryType>("all");
+
+  useEffect(() => {
+    fetchCourses();
+  }, []);
+
+  const fetchCourses = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("courses")
+        .select("*")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setCourses(data || []);
+    } catch (error) {
+      console.error("Error fetching courses:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getColorClasses = (color: string) => {
     switch (color) {
@@ -173,8 +105,16 @@ const Courses = () => {
 
   const displayedCourses =
     selectedCategory === "all"
-      ? [...courses.cybersecurity, ...courses.programming, ...courses.design]
-      : courses[selectedCategory];
+      ? courses
+      : courses.filter((course) => course.category === selectedCategory);
+
+  const mapLevelToType = (level: string): "Beginner" | "Intermediate" | "Advanced" => {
+    const normalizedLevel = level.toLowerCase();
+    if (normalizedLevel === "beginner") return "Beginner";
+    if (normalizedLevel === "intermediate") return "Intermediate";
+    if (normalizedLevel === "advanced") return "Advanced";
+    return "Beginner";
+  };
 
   return (
     <div className="min-h-screen bg-background matrix-bg">
@@ -196,15 +136,13 @@ const Courses = () => {
               const isSelected = selectedCategory === category.id;
 
               return (
-              <motion.div
+                <motion.div
                   key={category.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                   onClick={() =>
-                    setSelectedCategory(
-                      isSelected ? "all" : category.id
-                    )
+                    setSelectedCategory(isSelected ? "all" : category.id)
                   }
                   className={`cyber-card border p-6 cursor-pointer transition-all duration-300 ${
                     colors.border
@@ -246,18 +184,42 @@ const Courses = () => {
           )}
 
           {/* Courses Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {displayedCourses.map((course, index) => (
-              <motion.div
-                key={course.title}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <CourseCard {...course} />
-              </motion.div>
-            ))}
-          </div>
+          {loading ? (
+            <div className="flex justify-center py-16">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          ) : displayedCourses.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-16"
+            >
+              <BookOpen className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground font-mono">
+                No courses available yet.
+              </p>
+            </motion.div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {displayedCourses.map((course, index) => (
+                <motion.div
+                  key={course.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <CourseCard
+                    title={course.title}
+                    description={course.description || ""}
+                    level={mapLevelToType(course.level)}
+                    duration={course.duration || "N/A"}
+                    students={course.lessons_count || 0}
+                    image={course.image_url || "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800"}
+                  />
+                </motion.div>
+              ))}
+            </div>
+          )}
         </div>
       </main>
 
