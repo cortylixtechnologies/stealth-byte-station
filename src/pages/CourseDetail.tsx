@@ -13,6 +13,7 @@ import {
   ArrowLeft,
   Lock,
   Loader2,
+  Award,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -25,6 +26,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import LessonVideoPlayer from "@/components/LessonVideoPlayer";
 import PdfViewer from "@/components/PdfViewer";
+import CertificateDialog from "@/components/CertificateDialog";
 
 interface Course {
   id: string;
@@ -61,6 +63,12 @@ interface LessonProgress {
   is_completed: boolean;
 }
 
+interface Certificate {
+  id: string;
+  certificate_number: string;
+  issued_at: string;
+}
+
 const CourseDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -75,6 +83,9 @@ const CourseDetail = () => {
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showVideoPlayer, setShowVideoPlayer] = useState(false);
+  const [certificate, setCertificate] = useState<Certificate | null>(null);
+  const [showCertificate, setShowCertificate] = useState(false);
+  const [userName, setUserName] = useState("");
 
   useEffect(() => {
     if (id) {
@@ -106,21 +117,46 @@ const CourseDetail = () => {
         setIsEnrolled(!!enrollment);
 
         // Fetch progress
-        if (enrollment) {
-          const { data: progressData } = await supabase
-            .from("lesson_progress")
-            .select("lesson_id, is_completed")
-            .eq("user_id", user.id);
+          if (enrollment) {
+            const { data: progressData } = await supabase
+              .from("lesson_progress")
+              .select("lesson_id, is_completed")
+              .eq("user_id", user.id);
 
-          if (progressData) {
-            const progressMap: { [key: string]: boolean } = {};
-            progressData.forEach((p) => {
-              progressMap[p.lesson_id] = p.is_completed;
-            });
-            setProgress(progressMap);
+            if (progressData) {
+              const progressMap: { [key: string]: boolean } = {};
+              progressData.forEach((p) => {
+                progressMap[p.lesson_id] = p.is_completed;
+              });
+              setProgress(progressMap);
+            }
+          }
+
+          // Fetch existing certificate
+          const { data: certData } = await supabase
+            .from("certificates")
+            .select("id, certificate_number, issued_at")
+            .eq("course_id", id)
+            .eq("user_id", user.id)
+            .maybeSingle();
+
+          if (certData) {
+            setCertificate(certData);
+          }
+
+          // Fetch user profile for name
+          const { data: profileData } = await supabase
+            .from("profiles")
+            .select("full_name, username")
+            .eq("user_id", user.id)
+            .maybeSingle();
+
+          if (profileData) {
+            setUserName(profileData.full_name || profileData.username || user.email || "Student");
+          } else {
+            setUserName(user.email || "Student");
           }
         }
-      }
 
       // Fetch modules
       const { data: modulesData, error: modulesError } = await supabase
@@ -222,7 +258,10 @@ const CourseDetail = () => {
       lessons[moduleId].forEach((lesson) => allLessons.push(lesson.id));
     }
 
-    const completedCount = allLessons.filter((id) => progress[id]).length;
+    // Include the just-marked lesson in the count
+    const updatedProgress = { ...progress };
+    const completedCount = allLessons.filter((lessonId) => updatedProgress[lessonId]).length;
+    
     if (completedCount === allLessons.length && allLessons.length > 0) {
       // Mark course as completed
       if (user && id) {
@@ -235,9 +274,44 @@ const CourseDetail = () => {
           .eq("user_id", user.id)
           .eq("course_id", id);
 
-        toast.success("🎉 Congratulations! You've completed this course!");
+        // Check if certificate already exists
+        const { data: existingCert } = await supabase
+          .from("certificates")
+          .select("id, certificate_number, issued_at")
+          .eq("course_id", id)
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (!existingCert) {
+          // Generate certificate
+          const certificateNumber = generateCertificateNumber();
+          const { data: newCert, error: certError } = await supabase
+            .from("certificates")
+            .insert({
+              course_id: id,
+              user_id: user.id,
+              certificate_number: certificateNumber,
+            })
+            .select("id, certificate_number, issued_at")
+            .single();
+
+          if (!certError && newCert) {
+            setCertificate(newCert);
+            toast.success("🎉 Congratulations! You've completed this course and earned a certificate!");
+            setShowCertificate(true);
+          }
+        } else {
+          setCertificate(existingCert);
+          toast.success("🎉 Congratulations! You've completed this course!");
+        }
       }
     }
+  };
+
+  const generateCertificateNumber = () => {
+    const timestamp = Date.now().toString(36).toUpperCase();
+    const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+    return `SBA-${timestamp}-${random}`;
   };
 
   const getContentIcon = (contentType: string) => {
@@ -327,9 +401,19 @@ const CourseDetail = () => {
                     Your Progress
                   </h3>
                   <Progress value={calculateProgress()} className="h-3 mb-2" />
-                  <p className="text-sm text-muted-foreground font-mono">
+                  <p className="text-sm text-muted-foreground font-mono mb-4">
                     {calculateProgress()}% complete
                   </p>
+                  
+                  {certificate && (
+                    <Button
+                      onClick={() => setShowCertificate(true)}
+                      className="w-full font-mono bg-secondary text-secondary-foreground hover:bg-secondary/90"
+                    >
+                      <Award className="w-4 h-4 mr-2" />
+                      View Certificate
+                    </Button>
+                  )}
                 </div>
               </div>
             )}
@@ -530,6 +614,18 @@ const CourseDetail = () => {
         videoUrl={selectedLesson?.video_url || null}
         youtubeUrl={selectedLesson?.youtube_url || null}
       />
+
+      {/* Certificate Dialog */}
+      {certificate && course && (
+        <CertificateDialog
+          isOpen={showCertificate}
+          onClose={() => setShowCertificate(false)}
+          certificateNumber={certificate.certificate_number}
+          courseName={course.title}
+          userName={userName}
+          issuedDate={certificate.issued_at}
+        />
+      )}
 
       <Footer />
     </div>
