@@ -1,9 +1,13 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Clock, Users, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import EnrollmentDialog from "./EnrollmentDialog";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect } from "react";
 
 interface CourseCardProps {
   id: string;
@@ -29,11 +33,42 @@ const CourseCard = ({
   price,
 }: CourseCardProps) => {
   const [showEnrollDialog, setShowEnrollDialog] = useState(false);
+  const [isEnrolled, setIsEnrolled] = useState(false);
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    checkEnrollment();
+  }, [user, id]);
+
+  const checkEnrollment = async () => {
+    if (!user) {
+      setIsEnrolled(false);
+      return;
+    }
+
+    const { data } = await supabase
+      .from("course_enrollments")
+      .select("id")
+      .eq("course_id", id)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    setIsEnrolled(!!data);
+  };
 
   const levelColors = {
     Beginner: "border-secondary text-secondary",
     Intermediate: "border-primary text-primary",
     Advanced: "border-accent text-accent",
+  };
+
+  const handleButtonClick = () => {
+    if (isEnrolled) {
+      navigate(`/courses/${id}`);
+    } else {
+      setShowEnrollDialog(true);
+    }
   };
 
   return (
@@ -89,17 +124,28 @@ const CourseCard = ({
           </div>
           <Button
             variant="outline"
-            onClick={() => setShowEnrollDialog(true)}
-            className="w-full font-mono border-primary text-primary hover:bg-primary hover:text-primary-foreground transition-all"
+            onClick={handleButtonClick}
+            className={`w-full font-mono transition-all ${
+              isEnrolled
+                ? "bg-secondary text-secondary-foreground hover:bg-secondary/80 border-secondary"
+                : "border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+            }`}
           >
-            {isFree ? "Enroll Free" : `Enroll - $${price?.toFixed(2)}`}
+            {isEnrolled
+              ? "Continue Learning"
+              : isFree
+              ? "Enroll Free"
+              : `Enroll - $${price?.toFixed(2)}`}
           </Button>
         </div>
       </motion.div>
 
       <EnrollmentDialog
         isOpen={showEnrollDialog}
-        onClose={() => setShowEnrollDialog(false)}
+        onClose={() => {
+          setShowEnrollDialog(false);
+          checkEnrollment();
+        }}
         courseId={id}
         courseTitle={title}
         isFree={isFree}
