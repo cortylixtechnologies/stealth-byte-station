@@ -30,6 +30,7 @@ interface Video {
   title: string;
   description: string | null;
   youtube_url: string | null;
+  video_url: string | null;
   thumbnail_url: string | null;
   category: string;
   duration: string | null;
@@ -81,7 +82,8 @@ const AdminVideos = () => {
     const videoData = {
       title: formData.title,
       description: formData.description || null,
-      youtube_url: videoSource === "youtube" ? formData.youtube_url : formData.video_url || null,
+      youtube_url: videoSource === "youtube" ? formData.youtube_url || null : null,
+      video_url: videoSource === "upload" ? formData.video_url || null : null,
       thumbnail_url: formData.thumbnail_url || null,
       category: formData.category,
       duration: formData.duration || null,
@@ -127,14 +129,15 @@ const AdminVideos = () => {
 
   const openEditDialog = (video: Video) => {
     setEditingVideo(video);
-    const isYouTube = video.youtube_url?.includes("youtube") || video.youtube_url?.includes("youtu.be");
-    setVideoSource(isYouTube ? "youtube" : "upload");
+    const hasYouTube = video.youtube_url?.includes("youtube") || video.youtube_url?.includes("youtu.be");
+    const hasUploadedVideo = video.video_url && video.video_url.trim() !== "";
+    setVideoSource(hasUploadedVideo ? "upload" : "youtube");
     setFormData({
       title: video.title,
       description: video.description || "",
-      youtube_url: isYouTube ? video.youtube_url || "" : "",
+      youtube_url: video.youtube_url || "",
       thumbnail_url: video.thumbnail_url || "",
-      video_url: !isYouTube ? video.youtube_url || "" : "",
+      video_url: video.video_url || "",
       category: video.category,
       duration: video.duration || "",
       is_active: video.is_active,
