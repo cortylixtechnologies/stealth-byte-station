@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Mail, Loader2, CheckCircle } from "lucide-react";
+import { Mail, Loader2, CheckCircle, Lock, Eye, EyeOff } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -31,11 +31,18 @@ const EnrollmentDialog = ({
   price,
 }: EnrollmentDialogProps) => {
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
   const validateEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
+  const validatePassword = (password: string) => {
+    return password.length >= 6;
   };
 
   const handleEnroll = async (e: React.FormEvent) => {
@@ -46,48 +53,34 @@ const EnrollmentDialog = ({
       return;
     }
 
+    if (!validatePassword(password)) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      // Check if user exists with this email
-      const { data: existingUser } = await supabase
-        .from("profiles")
-        .select("user_id")
-        .ilike("username", email)
-        .maybeSingle();
-
-      let userId = existingUser?.user_id;
-
-      // If no existing user, we'll create a temporary enrollment record
-      // For now, we'll use the email as identifier
-      if (!userId) {
-        // For guest enrollment, we store email in a special way
-        // First check if already enrolled with this email
-        const { data: existingEnrollment } = await supabase
-          .from("course_enrollments")
-          .select("id")
-          .eq("course_id", courseId)
-          .ilike("user_id", email)
-          .maybeSingle();
-
-        if (existingEnrollment) {
-          toast.error("You're already enrolled in this course!");
-          setLoading(false);
-          return;
-        }
-      }
-
-      // For simplicity, we'll use the auth system
-      // Sign up the user with the email (or log them in if exists)
+      // Sign up the user with email and password
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: email,
-        password: Math.random().toString(36).slice(-12) + "Aa1!", // Generate random password
+        password: password,
         options: {
           emailRedirectTo: `${window.location.origin}/courses`,
         },
       });
 
-      if (signUpError && !signUpError.message.includes("already registered")) {
+      if (signUpError) {
+        if (signUpError.message.includes("already registered")) {
+          toast.error("This email is already registered. Please login instead.");
+          setLoading(false);
+          return;
+        }
         throw signUpError;
       }
 
@@ -121,7 +114,7 @@ const EnrollmentDialog = ({
       }
 
       setSuccess(true);
-      toast.success("Successfully enrolled! Check your email for access details.");
+      toast.success("Successfully enrolled! You can now login with your credentials.");
     } catch (error: any) {
       console.error("Enrollment error:", error);
       toast.error("Enrollment failed: " + error.message);
@@ -132,6 +125,8 @@ const EnrollmentDialog = ({
 
   const handleClose = () => {
     setEmail("");
+    setPassword("");
+    setConfirmPassword("");
     setSuccess(false);
     onClose();
   };
@@ -157,11 +152,10 @@ const EnrollmentDialog = ({
               <CheckCircle className="w-8 h-8 text-secondary" />
             </div>
             <p className="text-center text-muted-foreground text-sm">
-              A confirmation email has been sent to <strong className="text-foreground">{email}</strong>.
-              Follow the instructions to access your course.
+              Account created successfully! You can now <strong className="text-foreground">login</strong> with your email and password to access your course.
             </p>
             <Button onClick={handleClose} className="font-mono">
-              Close
+              Go to Login
             </Button>
           </div>
         ) : (
@@ -180,6 +174,51 @@ const EnrollmentDialog = ({
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-10 font-mono bg-input border-border"
                   required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password" className="font-mono text-foreground">
+                Password
+              </Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Create a password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pl-10 pr-10 font-mono bg-input border-border"
+                  required
+                  minLength={6}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword" className="font-mono text-foreground">
+                Confirm Password
+              </Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="confirmPassword"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Confirm your password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="pl-10 font-mono bg-input border-border"
+                  required
+                  minLength={6}
                 />
               </div>
             </div>
@@ -205,15 +244,15 @@ const EnrollmentDialog = ({
               {loading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Enrolling...
+                  Creating Account...
                 </>
               ) : (
-                "Enroll Now"
+                "Create Account & Enroll"
               )}
             </Button>
 
             <p className="text-xs text-muted-foreground text-center">
-              By enrolling, you'll receive course updates and access details via email.
+              By enrolling, you create an account to access your courses.
             </p>
           </form>
         )}
