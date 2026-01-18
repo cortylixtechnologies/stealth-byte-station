@@ -12,6 +12,7 @@ import {
   LogOut,
   Menu,
   X,
+  BookOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -20,6 +21,7 @@ import AdminTools from "@/components/admin/AdminTools";
 import AdminVideos from "@/components/admin/AdminVideos";
 import AdminNews from "@/components/admin/AdminNews";
 import AdminCourses from "@/components/admin/AdminCourses";
+import AdminCourseModules from "@/components/admin/AdminCourseModules";
 import AdminUsers from "@/components/admin/AdminUsers";
 
 const menuItems = [
@@ -27,6 +29,7 @@ const menuItems = [
   { id: "videos", label: "Videos", icon: Video },
   { id: "news", label: "News", icon: Newspaper },
   { id: "courses", label: "Courses", icon: GraduationCap },
+  { id: "modules", label: "Course Content", icon: BookOpen },
   { id: "users", label: "Users", icon: Users },
 ];
 
@@ -57,6 +60,8 @@ const Admin = () => {
         return <AdminNews />;
       case "courses":
         return <AdminCourses />;
+      case "modules":
+        return <AdminCourseModules />;
       case "users":
         return <AdminUsers />;
       default:
