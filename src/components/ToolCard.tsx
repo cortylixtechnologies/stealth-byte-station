@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ExternalLink, Lock, Unlock } from "lucide-react";
+import { ExternalLink, Lock, Unlock, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -8,10 +8,18 @@ interface ToolCardProps {
   description: string;
   category: "free" | "paid";
   icon: React.ReactNode;
+  price?: number | null;
+  url?: string | null;
 }
 
-const ToolCard = ({ name, description, category, icon }: ToolCardProps) => {
+const ToolCard = ({ name, description, category, icon, price, url }: ToolCardProps) => {
   const isFree = category === "free";
+
+  const handleClick = () => {
+    if (url) {
+      window.open(url, "_blank");
+    }
+  };
 
   return (
     <motion.div
@@ -47,7 +55,7 @@ const ToolCard = ({ name, description, category, icon }: ToolCardProps) => {
             </span>
           ) : (
             <span className="flex items-center gap-1">
-              <Lock className="w-3 h-3" /> PAID
+              <Lock className="w-3 h-3" /> ${price || 0}
             </span>
           )}
         </Badge>
@@ -59,6 +67,7 @@ const ToolCard = ({ name, description, category, icon }: ToolCardProps) => {
       <p className="text-muted-foreground text-sm mb-4">{description}</p>
 
       <Button
+        onClick={handleClick}
         variant="outline"
         className={`w-full font-mono transition-all ${
           isFree
@@ -73,8 +82,8 @@ const ToolCard = ({ name, description, category, icon }: ToolCardProps) => {
           </>
         ) : (
           <>
-            <Lock className="w-4 h-4 mr-2" />
-            Subscribe
+            <ShoppingCart className="w-4 h-4 mr-2" />
+            Buy Now
           </>
         )}
       </Button>

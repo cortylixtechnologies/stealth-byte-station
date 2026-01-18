@@ -174,6 +174,8 @@ const Tools = () => {
                     description={tool.description || ""}
                     category={tool.category as "free" | "paid"}
                     icon={getIconComponent(tool.icon)}
+                    price={tool.price}
+                    url={tool.url}
                   />
                 </motion.div>
               ))}
