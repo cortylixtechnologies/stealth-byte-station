@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
 
 interface EnrollmentDialogProps {
   isOpen: boolean;
@@ -253,6 +254,17 @@ const EnrollmentDialog = ({
 
             <p className="text-xs text-muted-foreground text-center">
               By enrolling, you create an account to access your courses.
+            </p>
+
+            <p className="text-sm text-center text-muted-foreground">
+              Already have an account?{" "}
+              <Link 
+                to="/auth" 
+                onClick={handleClose}
+                className="text-primary hover:underline font-medium"
+              >
+                Login here
+              </Link>
             </p>
           </form>
         )}
