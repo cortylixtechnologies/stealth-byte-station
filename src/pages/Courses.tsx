@@ -209,12 +209,15 @@ const Courses = () => {
                   transition={{ delay: index * 0.05 }}
                 >
                   <CourseCard
+                    id={course.id}
                     title={course.title}
                     description={course.description || ""}
                     level={mapLevelToType(course.level)}
                     duration={course.duration || "N/A"}
                     students={course.lessons_count || 0}
                     image={course.image_url || "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800"}
+                    isFree={course.is_free}
+                    price={course.price}
                   />
                 </motion.div>
               ))}
