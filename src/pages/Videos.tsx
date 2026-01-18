@@ -16,6 +16,7 @@ interface Video {
   description: string | null;
   thumbnail_url: string | null;
   youtube_url: string | null;
+  video_url: string | null;
   duration: string | null;
   category: string;
 }
@@ -128,6 +129,8 @@ const Videos = () => {
                     thumbnail={video.thumbnail_url || "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800"}
                     duration={video.duration || "N/A"}
                     category={video.category}
+                    videoUrl={video.video_url}
+                    youtubeUrl={video.youtube_url}
                   />
                 </motion.div>
               ))}
