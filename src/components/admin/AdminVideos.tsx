@@ -19,9 +19,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ImageUpload from "./ImageUpload";
+import VideoUpload from "./VideoUpload";
 
 interface Video {
   id: string;
@@ -41,11 +43,13 @@ const AdminVideos = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingVideo, setEditingVideo] = useState<Video | null>(null);
+  const [videoSource, setVideoSource] = useState<"youtube" | "upload">("youtube");
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     youtube_url: "",
     thumbnail_url: "",
+    video_url: "",
     category: "hacking",
     duration: "",
     is_active: true,
@@ -77,7 +81,7 @@ const AdminVideos = () => {
     const videoData = {
       title: formData.title,
       description: formData.description || null,
-      youtube_url: formData.youtube_url || null,
+      youtube_url: videoSource === "youtube" ? formData.youtube_url : formData.video_url || null,
       thumbnail_url: formData.thumbnail_url || null,
       category: formData.category,
       duration: formData.duration || null,
@@ -123,11 +127,14 @@ const AdminVideos = () => {
 
   const openEditDialog = (video: Video) => {
     setEditingVideo(video);
+    const isYouTube = video.youtube_url?.includes("youtube") || video.youtube_url?.includes("youtu.be");
+    setVideoSource(isYouTube ? "youtube" : "upload");
     setFormData({
       title: video.title,
       description: video.description || "",
-      youtube_url: video.youtube_url || "",
+      youtube_url: isYouTube ? video.youtube_url || "" : "",
       thumbnail_url: video.thumbnail_url || "",
+      video_url: !isYouTube ? video.youtube_url || "" : "",
       category: video.category,
       duration: video.duration || "",
       is_active: video.is_active,
@@ -137,11 +144,13 @@ const AdminVideos = () => {
 
   const resetForm = () => {
     setEditingVideo(null);
+    setVideoSource("youtube");
     setFormData({
       title: "",
       description: "",
       youtube_url: "",
       thumbnail_url: "",
+      video_url: "",
       category: "hacking",
       duration: "",
       is_active: true,
@@ -192,23 +201,41 @@ const AdminVideos = () => {
                   className="font-mono bg-input border-border"
                 />
               </div>
+              
               <div className="space-y-2">
-                <Label className="font-mono">YouTube URL</Label>
-                <Input
-                  value={formData.youtube_url}
-                  onChange={(e) => setFormData({ ...formData, youtube_url: e.target.value })}
-                  placeholder="https://youtube.com/watch?v=..."
-                  className="font-mono bg-input border-border"
-                />
+                <Label className="font-mono">Video Source</Label>
+                <Tabs value={videoSource} onValueChange={(v) => setVideoSource(v as "youtube" | "upload")}>
+                  <TabsList className="w-full">
+                    <TabsTrigger value="youtube" className="flex-1 font-mono">YouTube URL</TabsTrigger>
+                    <TabsTrigger value="upload" className="flex-1 font-mono">Upload Video</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="youtube" className="mt-4">
+                    <Input
+                      value={formData.youtube_url}
+                      onChange={(e) => setFormData({ ...formData, youtube_url: e.target.value })}
+                      placeholder="https://youtube.com/watch?v=..."
+                      className="font-mono bg-input border-border"
+                    />
+                  </TabsContent>
+                  <TabsContent value="upload" className="mt-4">
+                    <VideoUpload
+                      value={formData.video_url}
+                      onChange={(url) => setFormData({ ...formData, video_url: url })}
+                      folder="videos"
+                    />
+                  </TabsContent>
+                </Tabs>
               </div>
+
               <div className="space-y-2">
                 <Label className="font-mono">Video Thumbnail</Label>
                 <ImageUpload
                   value={formData.thumbnail_url}
                   onChange={(url) => setFormData({ ...formData, thumbnail_url: url })}
-                  folder="videos"
+                  folder="thumbnails"
                 />
               </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="font-mono">Category</Label>

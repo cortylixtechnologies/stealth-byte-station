@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Edit, Trash2, Search } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,6 +21,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import ImageUpload from "./ImageUpload";
 
 interface Tool {
   id: string;
@@ -167,13 +168,21 @@ const AdminTools = () => {
               Add Tool
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-card border-border">
+          <DialogContent className="bg-card border-border max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="font-mono text-foreground">
                 {editingTool ? "Edit Tool" : "Add New Tool"}
               </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label className="font-mono">Tool Image</Label>
+                <ImageUpload
+                  value={formData.icon}
+                  onChange={(url) => setFormData({ ...formData, icon: url })}
+                  folder="tools"
+                />
+              </div>
               <div className="space-y-2">
                 <Label className="font-mono">Name</Label>
                 <Input
@@ -220,16 +229,7 @@ const AdminTools = () => {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label className="font-mono">Icon (Lucide icon name)</Label>
-                <Input
-                  value={formData.icon}
-                  onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-                  placeholder="e.g., Shield, Lock, Terminal"
-                  className="font-mono bg-input border-border"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="font-mono">URL</Label>
+                <Label className="font-mono">Tool URL</Label>
                 <Input
                   value={formData.url}
                   onChange={(e) => setFormData({ ...formData, url: e.target.value })}
@@ -269,8 +269,19 @@ const AdminTools = () => {
           {filteredTools.map((tool) => (
             <div
               key={tool.id}
-              className="flex items-center justify-between p-4 bg-card border border-border rounded-lg"
+              className="flex items-center gap-4 p-4 bg-card border border-border rounded-lg"
             >
+              <div className="w-16 h-16 bg-muted rounded-md flex items-center justify-center overflow-hidden">
+                {tool.icon && tool.icon.startsWith("http") ? (
+                  <img
+                    src={tool.icon}
+                    alt={tool.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <Wrench className="w-8 h-8 text-muted-foreground" />
+                )}
+              </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <h3 className="font-mono font-semibold text-foreground">{tool.name}</h3>
@@ -289,7 +300,7 @@ const AdminTools = () => {
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-muted-foreground mt-1">{tool.description}</p>
+                <p className="text-sm text-muted-foreground mt-1 line-clamp-1">{tool.description}</p>
               </div>
               <div className="flex gap-2">
                 <Button
