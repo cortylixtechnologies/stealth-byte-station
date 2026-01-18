@@ -16,7 +16,7 @@ interface Video {
   description: string | null;
   thumbnail_url: string | null;
   youtube_url: string | null;
-  video_url: string | null;
+  video_url?: string | null;
   duration: string | null;
   category: string;
 }
