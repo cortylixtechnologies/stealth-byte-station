@@ -15,6 +15,7 @@ import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import ImageUpload from "./ImageUpload";
 
 interface NewsItem {
   id: string;
@@ -197,12 +198,11 @@ const AdminNews = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label className="font-mono">Image URL</Label>
-                <Input
+                <Label className="font-mono">Article Image</Label>
+                <ImageUpload
                   value={formData.image_url}
-                  onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                  placeholder="https://..."
-                  className="font-mono bg-input border-border"
+                  onChange={(url) => setFormData({ ...formData, image_url: url })}
+                  folder="news"
                 />
               </div>
               <div className="space-y-2">
