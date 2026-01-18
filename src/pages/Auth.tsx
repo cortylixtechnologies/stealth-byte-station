@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Shield,
   Terminal,
@@ -11,17 +11,106 @@ import {
   EyeOff,
   Github,
   Chrome,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import GlitchText from "@/components/GlitchText";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
+import { z } from "zod";
+
+const emailSchema = z.string().email("Invalid email address");
+const passwordSchema = z.string().min(6, "Password must be at least 6 characters");
+const usernameSchema = z.string().min(3, "Username must be at least 3 characters").optional();
 
 const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
-  const [userType, setUserType] = useState<"user" | "admin">("user");
+  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("");
+  const [errors, setErrors] = useState<{ email?: string; password?: string; username?: string }>({});
+
+  const { signIn, signUp, user, isAdmin } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) {
+      if (isAdmin) {
+        navigate("/admin");
+      } else {
+        navigate("/");
+      }
+    }
+  }, [user, isAdmin, navigate]);
+
+  const validateForm = () => {
+    const newErrors: { email?: string; password?: string; username?: string } = {};
+
+    const emailResult = emailSchema.safeParse(email);
+    if (!emailResult.success) {
+      newErrors.email = emailResult.error.errors[0].message;
+    }
+
+    const passwordResult = passwordSchema.safeParse(password);
+    if (!passwordResult.success) {
+      newErrors.password = passwordResult.error.errors[0].message;
+    }
+
+    if (!isLogin && username) {
+      const usernameResult = usernameSchema.safeParse(username);
+      if (!usernameResult.success) {
+        newErrors.username = usernameResult.error.errors[0].message;
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+
+    setLoading(true);
+    const { error } = await signIn(email, password);
+    setLoading(false);
+
+    if (error) {
+      if (error.message.includes("Invalid login credentials")) {
+        toast.error("Invalid email or password");
+      } else if (error.message.includes("Email not confirmed")) {
+        toast.error("Please confirm your email address");
+      } else {
+        toast.error(error.message);
+      }
+    } else {
+      toast.success("Welcome back!");
+    }
+  };
+
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+
+    setLoading(true);
+    const { error } = await signUp(email, password, username);
+    setLoading(false);
+
+    if (error) {
+      if (error.message.includes("User already registered")) {
+        toast.error("An account with this email already exists");
+      } else {
+        toast.error(error.message);
+      }
+    } else {
+      toast.success("Account created successfully!");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background matrix-bg flex items-center justify-center p-4 relative overflow-hidden">
@@ -49,37 +138,12 @@ const Auth = () => {
         </Link>
 
         <div className="cyber-card border border-border p-8 rounded-lg shadow-neon-cyan">
-          {/* User Type Toggle */}
-          <div className="flex gap-2 mb-6">
-            <Button
-              variant="outline"
-              className={`flex-1 font-mono transition-all ${
-                userType === "user"
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "border-border text-muted-foreground hover:border-primary hover:text-primary"
-              }`}
-              onClick={() => setUserType("user")}
-            >
-              <User className="w-4 h-4 mr-2" />
-              User
-            </Button>
-            <Button
-              variant="outline"
-              className={`flex-1 font-mono transition-all ${
-                userType === "admin"
-                  ? "bg-accent text-accent-foreground border-accent"
-                  : "border-border text-muted-foreground hover:border-accent hover:text-accent"
-              }`}
-              onClick={() => setUserType("admin")}
-            >
-              <Shield className="w-4 h-4 mr-2" />
-              Admin
-            </Button>
-          </div>
-
           <Tabs
             value={isLogin ? "login" : "signup"}
-            onValueChange={(v) => setIsLogin(v === "login")}
+            onValueChange={(v) => {
+              setIsLogin(v === "login");
+              setErrors({});
+            }}
           >
             <TabsList className="grid w-full grid-cols-2 mb-6 bg-muted">
               <TabsTrigger
@@ -103,6 +167,7 @@ const Auth = () => {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
                   className="space-y-4"
+                  onSubmit={handleLogin}
                 >
                   <div className="space-y-2">
                     <Label htmlFor="email" className="font-mono text-sm">
@@ -114,9 +179,14 @@ const Auth = () => {
                         id="email"
                         type="email"
                         placeholder="ninja@cyberninja.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
                         className="pl-10 font-mono bg-input border-border focus:border-primary focus:ring-primary"
                       />
                     </div>
+                    {errors.email && (
+                      <p className="text-xs text-destructive font-mono">{errors.email}</p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -129,6 +199,8 @@ const Auth = () => {
                         id="password"
                         type={showPassword ? "text" : "password"}
                         placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
                         className="pl-10 pr-10 font-mono bg-input border-border focus:border-primary focus:ring-primary"
                       />
                       <button
@@ -143,31 +215,22 @@ const Auth = () => {
                         )}
                       </button>
                     </div>
-                  </div>
-
-                  <div className="flex items-center justify-between text-sm">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        className="rounded border-border"
-                      />
-                      <span className="text-muted-foreground">Remember me</span>
-                    </label>
-                    <a href="#" className="text-primary hover:underline font-mono">
-                      Forgot password?
-                    </a>
+                    {errors.password && (
+                      <p className="text-xs text-destructive font-mono">{errors.password}</p>
+                    )}
                   </div>
 
                   <Button
                     type="submit"
-                    className={`w-full font-mono ${
-                      userType === "admin"
-                        ? "bg-accent text-accent-foreground hover:bg-accent/90 shadow-neon-magenta"
-                        : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-neon-cyan"
-                    }`}
+                    disabled={loading}
+                    className="w-full font-mono bg-primary text-primary-foreground hover:bg-primary/90 shadow-neon-cyan"
                   >
-                    <Terminal className="w-4 h-4 mr-2" />
-                    {userType === "admin" ? "Admin Login" : "Login"}
+                    {loading ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Terminal className="w-4 h-4 mr-2" />
+                    )}
+                    {loading ? "Logging in..." : "Login"}
                   </Button>
                 </motion.form>
               </TabsContent>
@@ -178,6 +241,7 @@ const Auth = () => {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                   className="space-y-4"
+                  onSubmit={handleSignup}
                 >
                   <div className="space-y-2">
                     <Label htmlFor="signup-name" className="font-mono text-sm">
@@ -189,9 +253,14 @@ const Auth = () => {
                         id="signup-name"
                         type="text"
                         placeholder="cyber_ninja"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
                         className="pl-10 font-mono bg-input border-border focus:border-primary focus:ring-primary"
                       />
                     </div>
+                    {errors.username && (
+                      <p className="text-xs text-destructive font-mono">{errors.username}</p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -204,9 +273,14 @@ const Auth = () => {
                         id="signup-email"
                         type="email"
                         placeholder="ninja@cyberninja.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
                         className="pl-10 font-mono bg-input border-border focus:border-primary focus:ring-primary"
                       />
                     </div>
+                    {errors.email && (
+                      <p className="text-xs text-destructive font-mono">{errors.email}</p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -222,6 +296,8 @@ const Auth = () => {
                         id="signup-password"
                         type={showPassword ? "text" : "password"}
                         placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
                         className="pl-10 pr-10 font-mono bg-input border-border focus:border-primary focus:ring-primary"
                       />
                       <button
@@ -236,14 +312,22 @@ const Auth = () => {
                         )}
                       </button>
                     </div>
+                    {errors.password && (
+                      <p className="text-xs text-destructive font-mono">{errors.password}</p>
+                    )}
                   </div>
 
                   <Button
                     type="submit"
+                    disabled={loading}
                     className="w-full font-mono bg-primary text-primary-foreground hover:bg-primary/90 shadow-neon-cyan"
                   >
-                    <Shield className="w-4 h-4 mr-2" />
-                    Create Account
+                    {loading ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Shield className="w-4 h-4 mr-2" />
+                    )}
+                    {loading ? "Creating account..." : "Create Account"}
                   </Button>
                 </motion.form>
               </TabsContent>
@@ -267,6 +351,7 @@ const Auth = () => {
             <Button
               variant="outline"
               className="font-mono border-border hover:border-primary hover:text-primary"
+              disabled
             >
               <Chrome className="w-4 h-4 mr-2" />
               Google
@@ -274,11 +359,16 @@ const Auth = () => {
             <Button
               variant="outline"
               className="font-mono border-border hover:border-primary hover:text-primary"
+              disabled
             >
               <Github className="w-4 h-4 mr-2" />
               GitHub
             </Button>
           </div>
+
+          <p className="text-xs text-center text-muted-foreground mt-4 font-mono">
+            Social login coming soon
+          </p>
         </div>
 
         {/* Back to Home */}

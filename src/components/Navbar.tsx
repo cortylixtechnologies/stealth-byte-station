@@ -1,8 +1,16 @@
-import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Shield, Terminal } from "lucide-react";
+import { Menu, X, Shield, Terminal, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const navLinks = [
   { name: "Home", path: "/" },
@@ -17,6 +25,13 @@ const navLinks = [
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, isAdmin, signOut, loading } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">
@@ -53,14 +68,50 @@ const Navbar = () => {
 
           {/* Auth Button */}
           <div className="hidden md:flex items-center gap-3">
-            <Link to="/auth">
-              <Button
-                variant="outline"
-                className="font-mono border-primary text-primary hover:bg-primary hover:text-primary-foreground neon-border transition-all duration-300"
-              >
-                [ LOGIN ]
-              </Button>
-            </Link>
+            {loading ? (
+              <div className="w-24 h-9 bg-muted animate-pulse rounded-md" />
+            ) : user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="font-mono border-primary text-primary hover:bg-primary hover:text-primary-foreground neon-border transition-all duration-300"
+                  >
+                    <User className="w-4 h-4 mr-2" />
+                    {isAdmin ? "Admin" : "Account"}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 bg-card border-border">
+                  {isAdmin && (
+                    <>
+                      <DropdownMenuItem asChild>
+                        <Link to="/admin" className="font-mono cursor-pointer">
+                          <Shield className="w-4 h-4 mr-2 text-accent" />
+                          Admin Panel
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
+                  <DropdownMenuItem
+                    onClick={handleSignOut}
+                    className="font-mono text-destructive focus:text-destructive cursor-pointer"
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link to="/auth">
+                <Button
+                  variant="outline"
+                  className="font-mono border-primary text-primary hover:bg-primary hover:text-primary-foreground neon-border transition-all duration-300"
+                >
+                  [ LOGIN ]
+                </Button>
+              </Link>
+            )}
           </div>
 
           {/* Mobile Menu Toggle */}
@@ -98,14 +149,39 @@ const Navbar = () => {
                   {">"} {link.name}
                 </Link>
               ))}
-              <Link to="/auth" onClick={() => setIsOpen(false)}>
-                <Button
-                  variant="outline"
-                  className="w-full mt-2 font-mono border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-                >
-                  [ LOGIN ]
-                </Button>
-              </Link>
+              {user ? (
+                <>
+                  {isAdmin && (
+                    <Link to="/admin" onClick={() => setIsOpen(false)}>
+                      <Button
+                        variant="outline"
+                        className="w-full mt-2 font-mono border-accent text-accent hover:bg-accent hover:text-accent-foreground"
+                      >
+                        [ ADMIN PANEL ]
+                      </Button>
+                    </Link>
+                  )}
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      handleSignOut();
+                      setIsOpen(false);
+                    }}
+                    className="w-full mt-2 font-mono border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                  >
+                    [ LOGOUT ]
+                  </Button>
+                </>
+              ) : (
+                <Link to="/auth" onClick={() => setIsOpen(false)}>
+                  <Button
+                    variant="outline"
+                    className="w-full mt-2 font-mono border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+                  >
+                    [ LOGIN ]
+                  </Button>
+                </Link>
+              )}
             </div>
           </motion.div>
         )}
