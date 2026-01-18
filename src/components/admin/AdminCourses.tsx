@@ -21,6 +21,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import ImageUpload from "./ImageUpload";
 
 interface Course {
   id: string;
@@ -274,12 +275,11 @@ const AdminCourses = () => {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label className="font-mono">Image URL</Label>
-                <Input
+                <Label className="font-mono">Course Image</Label>
+                <ImageUpload
                   value={formData.image_url}
-                  onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                  placeholder="https://..."
-                  className="font-mono bg-input border-border"
+                  onChange={(url) => setFormData({ ...formData, image_url: url })}
+                  folder="courses"
                 />
               </div>
               <div className="flex items-center justify-between">
