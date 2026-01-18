@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { ExternalLink, Lock, Unlock, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import PaymentDialog from "./PaymentDialog";
 
 interface ToolCardProps {
   name: string;
@@ -14,10 +16,13 @@ interface ToolCardProps {
 
 const ToolCard = ({ name, description, category, icon, price, url }: ToolCardProps) => {
   const isFree = category === "free";
+  const [showPayment, setShowPayment] = useState(false);
 
   const handleClick = () => {
-    if (url) {
+    if (isFree && url) {
       window.open(url, "_blank");
+    } else if (!isFree) {
+      setShowPayment(true);
     }
   };
 
@@ -87,6 +92,13 @@ const ToolCard = ({ name, description, category, icon, price, url }: ToolCardPro
           </>
         )}
       </Button>
+
+      <PaymentDialog
+        open={showPayment}
+        onOpenChange={setShowPayment}
+        toolName={name}
+        price={price || 0}
+      />
     </motion.div>
   );
 };
