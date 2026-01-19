@@ -8,7 +8,8 @@ import {
   Github,
   Instagram,
   Facebook,
-  Chrome,
+  Youtube,
+  Linkedin,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,8 +25,8 @@ const contactInfo = [
   {
     icon: <Mail className="w-6 h-6" />,
     label: "Email",
-    value: "contact@cyberninja.com",
-    href: "mailto:contact@cyberninja.com",
+    value: "nobodyerror255@gmail.com",
+    href: "mailto:nobodyerror255@gmail.com",
   },
   {
     icon: <Phone className="w-6 h-6" />,
@@ -49,28 +50,28 @@ const contactInfo = [
 
 const socialLinks = [
   {
-    icon: <Chrome className="w-6 h-6" />,
-    label: "Google",
-    href: "https://google.com",
-    color: "hover:text-[#4285F4] hover:border-[#4285F4]",
-  },
-  {
     icon: <Github className="w-6 h-6" />,
     label: "GitHub",
-    href: "https://github.com",
+    href: "https://github.com/CyberNinja-Tz",
     color: "hover:text-foreground hover:border-foreground",
-  },
-  {
-    icon: <Facebook className="w-6 h-6" />,
-    label: "Facebook",
-    href: "https://facebook.com",
-    color: "hover:text-[#1877F2] hover:border-[#1877F2]",
   },
   {
     icon: <Instagram className="w-6 h-6" />,
     label: "Instagram",
-    href: "https://instagram.com",
+    href: "https://www.instagram.com/cyberninja200/",
     color: "hover:text-[#E4405F] hover:border-[#E4405F]",
+  },
+  {
+    icon: <Youtube className="w-6 h-6" />,
+    label: "YouTube",
+    href: "https://www.youtube.com/@nobodyerror-q7w2n",
+    color: "hover:text-[#FF0000] hover:border-[#FF0000]",
+  },
+  {
+    icon: <Linkedin className="w-6 h-6" />,
+    label: "LinkedIn",
+    href: "https://www.linkedin.com/in/cyber-ninja-3a8534399/",
+    color: "hover:text-[#0A66C2] hover:border-[#0A66C2]",
   },
 ];
 
@@ -112,7 +113,7 @@ const Contact = () => {
                       <Input
                         id="name"
                         placeholder="Your name"
-                        className="font-mono bg-input border-border focus:border-primary"
+                        className="font-mono"
                       />
                     </div>
                     <div className="space-y-2">
@@ -123,10 +124,11 @@ const Contact = () => {
                         id="email"
                         type="email"
                         placeholder="your@email.com"
-                        className="font-mono bg-input border-border focus:border-primary"
+                        className="font-mono"
                       />
                     </div>
                   </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="subject" className="font-mono text-sm">
                       Subject
@@ -134,9 +136,10 @@ const Contact = () => {
                     <Input
                       id="subject"
                       placeholder="How can we help?"
-                      className="font-mono bg-input border-border focus:border-primary"
+                      className="font-mono"
                     />
                   </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="message" className="font-mono text-sm">
                       Message
@@ -145,9 +148,10 @@ const Contact = () => {
                       id="message"
                       placeholder="Your message..."
                       rows={5}
-                      className="font-mono bg-input border-border focus:border-primary resize-none"
+                      className="font-mono resize-none"
                     />
                   </div>
+
                   <Button
                     type="submit"
                     className="w-full font-mono bg-primary text-primary-foreground hover:bg-primary/90 shadow-neon-cyan"
@@ -165,7 +169,6 @@ const Contact = () => {
               animate={{ opacity: 1, x: 0 }}
               className="space-y-6"
             >
-              {/* Contact Details */}
               <NeonCard variant="green">
                 <h3 className="font-mono text-xl font-bold text-foreground mb-6">
                   {"// Contact Info"}
@@ -191,7 +194,6 @@ const Contact = () => {
                 </div>
               </NeonCard>
 
-              {/* Social Links */}
               <NeonCard variant="magenta">
                 <h3 className="font-mono text-xl font-bold text-foreground mb-6">
                   {"// Follow Us"}
@@ -206,7 +208,9 @@ const Contact = () => {
                       className={`flex items-center gap-3 p-4 rounded-lg border border-border transition-all duration-300 ${social.color}`}
                     >
                       {social.icon}
-                      <span className="font-mono text-sm">{social.label}</span>
+                      <span className="font-mono text-sm">
+                        {social.label}
+                      </span>
                     </a>
                   ))}
                 </div>
