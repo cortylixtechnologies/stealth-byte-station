@@ -30,14 +30,14 @@ const contactInfo = [
   {
     icon: <Phone className="w-6 h-6" />,
     label: "Phone",
-    value: "+1 (555) 123-4567",
-    href: "tel:+15551234567",
+    value: "+255762223306",
+    href: "tel:+255762223306",
   },
   {
     icon: <MessageCircle className="w-6 h-6" />,
     label: "WhatsApp",
-    value: "+1 (555) 123-4567",
-    href: "https://wa.me/15551234567",
+    value: "+255762223306",
+    href: "https://wa.me/255762223306",
   },
   {
     icon: <MapPin className="w-6 h-6" />,
