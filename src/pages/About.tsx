@@ -102,8 +102,9 @@ const About = () => {
                     I am the Cyber Ninja, a multi-disciplinary tech professional
                     specializing in Cyber Security, Programming, and Graphic
                     Design. I build secure, resilient systems while crafting
-                    visually striking, user-focused digital experiences—ensuring
-                    your digital presence is both protected and powerful.
+                    visually striking, user-focused digital experiences—
+                    ensuring your digital presence is both protected and
+                    powerful.
                   </p>
                 </div>
               </div>
@@ -245,10 +246,12 @@ const About = () => {
                 Our Mission
               </h3>
               <p className="text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-                To democratize cybersecurity education and empower individuals
-                worldwide with the knowledge and tools to protect themselves and
-                organizations from digital threats. We believe that security
-                awareness is a fundamental right in the digital age.
+                Our mission is to deliver elite offensive security solutions with
+                precision and stealth. We specialize in infiltrating complex
+                infrastructures to uncover hidden risks, ensuring our clients
+                stay ten steps ahead of cyber criminals. We don’t just find bugs
+                — we neutralize threats through the lens of a professional
+                hacker.
               </p>
             </div>
           </motion.div>
