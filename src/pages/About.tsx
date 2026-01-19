@@ -1,7 +1,6 @@
 import { motion } from "framer-motion";
 import {
   Shield,
-  Award,
   Target,
   Zap,
   Users,
@@ -17,28 +16,27 @@ import WhatsAppButton from "@/components/WhatsAppButton";
 
 const certifications = [
   {
-    name: "Certified Ethical Hacker (CEH)",
-    organization: "EC-Council",
+    name: "AV/EDR Evasion – Practical Techniques",
+    organization: "Red Team Leaders",
+    link: "https://courses.redteamleaders.com/completion/34946a8f387eee39",
     icon: <Shield className="w-8 h-8" />,
   },
   {
-    name: "Offensive Security Certified Professional (OSCP)",
-    organization: "Offensive Security",
+    name: "OpSec & Anonymity for Red Teams",
+    organization: "Red Team Leaders",
+    link: "https://courses.redteamleaders.com/completion/97e9f58e53406a9e",
     icon: <Target className="w-8 h-8" />,
   },
   {
-    name: "CompTIA Security+",
-    organization: "CompTIA",
-    icon: <Award className="w-8 h-8" />,
-  },
-  {
-    name: "Certified Information Systems Security Professional (CISSP)",
-    organization: "ISC²",
+    name: "Introduction to Red Team Operation Management",
+    organization: "Red Team Leaders",
+    link: "https://courses.redteamleaders.com/completion/d014373fd0a589b9",
     icon: <Zap className="w-8 h-8" />,
   },
   {
-    name: "GIAC Penetration Tester (GPEN)",
-    organization: "SANS Institute",
+    name: "Malware Analysis – Introduction v1",
+    organization: "Red Team Leaders",
+    link: "https://courses.redteamleaders.com/completion/ae6f18972ba40a52",
     icon: <Code className="w-8 h-8" />,
   },
 ];
@@ -102,41 +100,13 @@ const About = () => {
                     I am the Cyber Ninja, a multi-disciplinary tech professional
                     specializing in Cyber Security, Programming, and Graphic
                     Design. I build secure, resilient systems while crafting
-                    visually striking, user-focused digital experiences—
-                    ensuring your digital presence is both protected and
-                    powerful.
+                    visually striking, user-focused digital experiences—ensuring
+                    your digital presence is both protected and powerful.
                   </p>
                 </div>
               </div>
             </motion.div>
           </div>
-
-          {/* Stats */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16 max-w-4xl mx-auto"
-          >
-            {[
-              { value: "10+", label: "Years Experience" },
-              { value: "500+", label: "Projects Completed" },
-              { value: "50K+", label: "Students Trained" },
-              { value: "100+", label: "Bugs Discovered" },
-            ].map((stat) => (
-              <div
-                key={stat.label}
-                className="text-center p-6 cyber-card border border-border rounded-lg"
-              >
-                <div className="font-mono text-3xl font-bold text-primary neon-text mb-2">
-                  {stat.value}
-                </div>
-                <div className="text-muted-foreground text-sm">
-                  {stat.label}
-                </div>
-              </div>
-            ))}
-          </motion.div>
 
           {/* Certifications */}
           <div className="mb-16">
@@ -154,34 +124,23 @@ const About = () => {
               </h3>
             </motion.div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
               {certifications.map((cert, index) => (
-                <motion.div
+                <motion.a
                   key={cert.name}
+                  href={cert.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.1 }}
                 >
                   <NeonCard
-                    variant={
-                      index % 3 === 0
-                        ? "cyan"
-                        : index % 3 === 1
-                        ? "green"
-                        : "magenta"
-                    }
+                    variant={index % 2 === 0 ? "cyan" : "magenta"}
                   >
                     <div className="flex items-start gap-4">
-                      <div
-                        className={`p-3 rounded-lg ${
-                          index % 3 === 0
-                            ? "bg-primary/10 text-primary"
-                            : index % 3 === 1
-                            ? "bg-secondary/10 text-secondary"
-                            : "bg-accent/10 text-accent"
-                        }`}
-                      >
+                      <div className="p-3 rounded-lg bg-primary/10 text-primary">
                         {cert.icon}
                       </div>
                       <div>
@@ -194,44 +153,10 @@ const About = () => {
                       </div>
                     </div>
                   </NeonCard>
-                </motion.div>
+                </motion.a>
               ))}
             </div>
           </div>
-
-          {/* Skills */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="max-w-4xl mx-auto"
-          >
-            <div className="text-center mb-8">
-              <span className="font-mono text-sm text-primary mb-2 block">
-                {"// Expertise"}
-              </span>
-              <h3 className="font-mono text-2xl font-bold text-foreground">
-                Skills & Specializations
-              </h3>
-            </div>
-
-            <div className="cyber-card border border-border p-8 rounded-lg">
-              <div className="flex flex-wrap gap-3 justify-center">
-                {skills.map((skill, index) => (
-                  <motion.span
-                    key={skill}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: index * 0.05 }}
-                    className="px-4 py-2 font-mono text-sm border border-primary/50 text-primary rounded-full hover:bg-primary hover:text-primary-foreground transition-colors cursor-default"
-                  >
-                    {skill}
-                  </motion.span>
-                ))}
-              </div>
-            </div>
-          </motion.div>
 
           {/* Mission */}
           <motion.div
