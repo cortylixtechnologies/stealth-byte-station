@@ -99,11 +99,10 @@ const About = () => {
                     Security Researcher & Ethical Hacker
                   </p>
                   <p className="text-muted-foreground leading-relaxed">
-                    With over a decade of experience in cybersecurity, I've dedicated
-                    my career to helping organizations secure their digital assets
-                    and training the next generation of security professionals. My
-                    mission is to make cybersecurity education accessible to everyone,
-                    from beginners to advanced practitioners.
+                   Here’s a concise, polished version:
+
+> I am the Cyber Ninja, a multi-disciplinary tech professional specializing in Cyber Security, Programming, and Graphic Design. I build secure, resilient systems while crafting visually striking, user-focused digital experiences—ensuring your digital presence is both protected and powerful.
+.
                   </p>
                 </div>
               </div>
