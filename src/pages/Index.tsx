@@ -60,7 +60,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background matrix-bg">
       <Navbar />
-      <WhatsAppButton phoneNumber="1234567890" />
+      <WhatsAppButton phoneNumber="255762223306" />
 
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 px-4 overflow-hidden scanline">
