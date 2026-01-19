@@ -99,10 +99,11 @@ const About = () => {
                     Security Researcher & Ethical Hacker
                   </p>
                   <p className="text-muted-foreground leading-relaxed">
-                   Here’s a concise, polished version:
-
-> I am the Cyber Ninja, a multi-disciplinary tech professional specializing in Cyber Security, Programming, and Graphic Design. I build secure, resilient systems while crafting visually striking, user-focused digital experiences—ensuring your digital presence is both protected and powerful.
-.
+                    I am the Cyber Ninja, a multi-disciplinary tech professional
+                    specializing in Cyber Security, Programming, and Graphic
+                    Design. I build secure, resilient systems while crafting
+                    visually striking, user-focused digital experiences—ensuring
+                    your digital presence is both protected and powerful.
                   </p>
                 </div>
               </div>
@@ -121,7 +122,7 @@ const About = () => {
               { value: "500+", label: "Projects Completed" },
               { value: "50K+", label: "Students Trained" },
               { value: "100+", label: "Bugs Discovered" },
-            ].map((stat, index) => (
+            ].map((stat) => (
               <div
                 key={stat.label}
                 className="text-center p-6 cyber-card border border-border rounded-lg"
@@ -129,7 +130,9 @@ const About = () => {
                 <div className="font-mono text-3xl font-bold text-primary neon-text mb-2">
                   {stat.value}
                 </div>
-                <div className="text-muted-foreground text-sm">{stat.label}</div>
+                <div className="text-muted-foreground text-sm">
+                  {stat.label}
+                </div>
               </div>
             ))}
           </motion.div>
