@@ -218,7 +218,7 @@ const Contact = () => {
 
               {/* Quick WhatsApp */}
               <motion.a
-                href="https://wa.me/15551234567?text=Hello! I'm interested in your services."
+                href="https://wa.me/+255762223306?text=Hello! Mr Cyber Ninja I'm interested in your services."
                 target="_blank"
                 rel="noopener noreferrer"
                 whileHover={{ scale: 1.02 }}
