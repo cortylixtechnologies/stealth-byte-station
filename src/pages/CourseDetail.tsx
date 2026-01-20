@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import DOMPurify from "dompurify";
 import {
   ChevronDown,
   ChevronRight,
@@ -579,7 +580,10 @@ const CourseDetail = () => {
                       <div
                         className="text-foreground whitespace-pre-wrap"
                         dangerouslySetInnerHTML={{
-                          __html: selectedLesson.text_content,
+                          __html: DOMPurify.sanitize(selectedLesson.text_content, {
+                            ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'a', 'code', 'pre', 'blockquote'],
+                            ALLOWED_ATTR: ['href', 'target', 'rel'],
+                          }),
                         }}
                       />
                     </div>
