@@ -63,6 +63,7 @@ interface Certificate {
   id: string;
   certificate_number: string;
   issued_at: string;
+  is_approved: boolean;
 }
 
 const CourseDetail = () => {
@@ -131,7 +132,7 @@ const CourseDetail = () => {
           // Fetch existing certificate
           const { data: certData } = await supabase
             .from("certificates")
-            .select("id, certificate_number, issued_at")
+            .select("id, certificate_number, issued_at, is_approved")
             .eq("course_id", id)
             .eq("user_id", user.id)
             .maybeSingle();
@@ -273,13 +274,13 @@ const CourseDetail = () => {
         // Check if certificate already exists
         const { data: existingCert } = await supabase
           .from("certificates")
-          .select("id, certificate_number, issued_at")
+          .select("id, certificate_number, issued_at, is_approved")
           .eq("course_id", id)
           .eq("user_id", user.id)
           .maybeSingle();
 
         if (!existingCert) {
-          // Generate certificate
+          // Generate certificate (pending admin approval)
           const certificateNumber = generateCertificateNumber();
           const { data: newCert, error: certError } = await supabase
             .from("certificates")
@@ -288,12 +289,12 @@ const CourseDetail = () => {
               user_id: user.id,
               certificate_number: certificateNumber,
             })
-            .select("id, certificate_number, issued_at")
+            .select("id, certificate_number, issued_at, is_approved")
             .single();
 
           if (!certError && newCert) {
             setCertificate(newCert);
-            toast.success("🎉 Congratulations! You've completed this course and earned a certificate!");
+            toast.success("🎉 Congratulations! You've completed this course! Your certificate is pending admin approval.");
             setShowCertificate(true);
           }
         } else {
@@ -623,6 +624,7 @@ const CourseDetail = () => {
           courseName={course.title}
           userName={userName}
           issuedDate={certificate.issued_at}
+          isApproved={certificate.is_approved}
         />
       )}
 

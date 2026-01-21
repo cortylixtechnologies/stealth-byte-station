@@ -1,13 +1,16 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Shield, Code, Palette, ArrowRight, Loader2, BookOpen } from "lucide-react";
+import { Shield, Code, Palette, ArrowRight, Loader2, BookOpen, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SectionHeader from "@/components/SectionHeader";
 import CourseCard from "@/components/CourseCard";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { Progress } from "@/components/ui/progress";
 
 interface Course {
   id: string;
@@ -20,6 +23,12 @@ interface Course {
   image_url: string | null;
   price: number | null;
   is_free: boolean;
+}
+
+interface EnrolledCourse extends Course {
+  progress: number;
+  completedLessons: number;
+  totalLessons: number;
 }
 
 type CategoryType = "all" | "cyber-security" | "programming" | "design";
@@ -50,12 +59,15 @@ const courseCategories = [
 
 const Courses = () => {
   const [courses, setCourses] = useState<Course[]>([]);
+  const [enrolledCourses, setEnrolledCourses] = useState<EnrolledCourse[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<CategoryType>("all");
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchCourses();
-  }, []);
+  }, [user]);
 
   const fetchCourses = async () => {
     try {
@@ -67,6 +79,80 @@ const Courses = () => {
 
       if (error) throw error;
       setCourses(data || []);
+
+      // If user is logged in, fetch their enrollments with progress
+      if (user) {
+        const { data: enrollments } = await supabase
+          .from("course_enrollments")
+          .select("course_id")
+          .eq("user_id", user.id);
+
+        if (enrollments && enrollments.length > 0) {
+          const enrolledCourseIds = enrollments.map((e) => e.course_id);
+          const enrolledCoursesData = (data || []).filter((c) =>
+            enrolledCourseIds.includes(c.id)
+          );
+
+          // Fetch progress for each enrolled course
+          const { data: progressData } = await supabase
+            .from("lesson_progress")
+            .select("lesson_id, is_completed")
+            .eq("user_id", user.id)
+            .eq("is_completed", true);
+
+          const completedLessons = new Set(
+            (progressData || []).map((p) => p.lesson_id)
+          );
+
+          // Fetch total lessons for each course
+          const { data: modulesData } = await supabase
+            .from("course_modules")
+            .select("id, course_id")
+            .in("course_id", enrolledCourseIds)
+            .eq("is_active", true);
+
+          const moduleIds = (modulesData || []).map((m) => m.id);
+
+          const { data: lessonsData } = await supabase
+            .from("course_lessons")
+            .select("id, module_id")
+            .in("module_id", moduleIds)
+            .eq("is_active", true);
+
+          // Map lessons to courses
+          const lessonsByCourse: { [courseId: string]: string[] } = {};
+          (lessonsData || []).forEach((lesson) => {
+            const module = (modulesData || []).find((m) => m.id === lesson.module_id);
+            if (module) {
+              if (!lessonsByCourse[module.course_id]) {
+                lessonsByCourse[module.course_id] = [];
+              }
+              lessonsByCourse[module.course_id].push(lesson.id);
+            }
+          });
+
+          const enrichedEnrolledCourses: EnrolledCourse[] = enrolledCoursesData.map(
+            (course) => {
+              const courseLessons = lessonsByCourse[course.id] || [];
+              const completedCount = courseLessons.filter((id) =>
+                completedLessons.has(id)
+              ).length;
+              const totalLessons = courseLessons.length;
+              const progress =
+                totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
+
+              return {
+                ...course,
+                progress,
+                completedLessons: completedCount,
+                totalLessons,
+              };
+            }
+          );
+
+          setEnrolledCourses(enrichedEnrolledCourses);
+        }
+      }
     } catch (error) {
       console.error("Error fetching courses:", error);
     } finally {
@@ -169,6 +255,54 @@ const Courses = () => {
             })}
           </div>
 
+          {/* My Enrolled Courses Section - Only shown when user is logged in and has enrollments */}
+          {user && enrolledCourses.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-12"
+            >
+              <div className="flex items-center gap-3 mb-6">
+                <GraduationCap className="w-6 h-6 text-secondary" />
+                <h2 className="font-mono text-xl font-bold text-foreground">
+                  Continue Learning
+                </h2>
+              </div>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {enrolledCourses.map((course) => (
+                  <motion.div
+                    key={`enrolled-${course.id}`}
+                    whileHover={{ scale: 1.02 }}
+                    onClick={() => navigate(`/courses/${course.id}`)}
+                    className="cyber-card border border-secondary/50 p-4 cursor-pointer hover:shadow-neon-green transition-all"
+                  >
+                    <div className="flex gap-4">
+                      <img
+                        src={course.image_url || "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=200"}
+                        alt={course.title}
+                        className="w-20 h-20 object-cover rounded-lg"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-mono font-bold text-foreground truncate">
+                          {course.title}
+                        </h3>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {course.completedLessons} of {course.totalLessons} lessons
+                        </p>
+                        <div className="mt-2">
+                          <Progress value={course.progress} className="h-2" />
+                        </div>
+                        <p className="text-xs text-secondary font-mono mt-1">
+                          {course.progress}% Complete
+                        </p>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
           {/* Category Title */}
           {selectedCategory !== "all" && (
             <motion.div
@@ -181,6 +315,16 @@ const Courses = () => {
                 Courses
               </h3>
             </motion.div>
+          )}
+
+          {/* All Courses Title when user is enrolled */}
+          {user && enrolledCourses.length > 0 && selectedCategory === "all" && (
+            <div className="flex items-center gap-3 mb-6">
+              <BookOpen className="w-6 h-6 text-primary" />
+              <h2 className="font-mono text-xl font-bold text-foreground">
+                All Courses
+              </h2>
+            </div>
           )}
 
           {/* Courses Grid */}
