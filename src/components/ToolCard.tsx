@@ -1,9 +1,7 @@
-import { useState } from "react";
 import { motion } from "framer-motion";
-import { ExternalLink, Lock, Unlock, ShoppingCart } from "lucide-react";
+import { ExternalLink, Lock, Unlock, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import PaymentDialog from "./PaymentDialog";
 
 interface ToolCardProps {
   name: string;
@@ -12,17 +10,29 @@ interface ToolCardProps {
   icon: React.ReactNode;
   price?: number | null;
   url?: string | null;
+  whatsappNumber?: string;
 }
 
-const ToolCard = ({ name, description, category, icon, price, url }: ToolCardProps) => {
+const ToolCard = ({ 
+  name, 
+  description, 
+  category, 
+  icon, 
+  price, 
+  url,
+  whatsappNumber = "1234567890" 
+}: ToolCardProps) => {
   const isFree = category === "free";
-  const [showPayment, setShowPayment] = useState(false);
 
   const handleClick = () => {
     if (isFree && url) {
       window.open(url, "_blank");
     } else if (!isFree) {
-      setShowPayment(true);
+      // Redirect to WhatsApp with tool purchase message
+      const message = encodeURIComponent(
+        `Hello! I'm interested in purchasing the "${name}" tool for $${price || 0}. Please provide payment details.`
+      );
+      window.open(`https://wa.me/${whatsappNumber}?text=${message}`, "_blank");
     }
   };
 
@@ -87,18 +97,11 @@ const ToolCard = ({ name, description, category, icon, price, url }: ToolCardPro
           </>
         ) : (
           <>
-            <ShoppingCart className="w-4 h-4 mr-2" />
-            Buy Now
+            <MessageCircle className="w-4 h-4 mr-2" />
+            Buy via WhatsApp
           </>
         )}
       </Button>
-
-      <PaymentDialog
-        open={showPayment}
-        onOpenChange={setShowPayment}
-        toolName={name}
-        price={price || 0}
-      />
     </motion.div>
   );
 };
