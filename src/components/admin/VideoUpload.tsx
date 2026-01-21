@@ -10,51 +10,59 @@ interface VideoUploadProps {
   folder?: string;
 }
 
-const VideoUpload = ({ value, onChange, folder = "videos" }: VideoUploadProps) => {
+const MAX_FILE_SIZE = 3 * 1024 * 1024 * 1024; // ✅ 3GB
+
+const VideoUpload = ({
+  value,
+  onChange,
+  folder = "videos",
+}: VideoUploadProps) => {
   const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
+    // ✅ Validate file type
     if (!file.type.startsWith("video/")) {
-      toast.error("Please upload a video file");
+      toast.error("Please upload a valid video file");
       return;
     }
 
-    // Validate file size (max 100MB)
-    if (file.size > 100 * 1024 * 1024) {
-      toast.error("File size must be less than 100MB");
+    // ✅ 3GB file size limit
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error("File size must be less than 3GB");
       return;
     }
 
     setUploading(true);
-    setUploadProgress(0);
 
     try {
       const fileExt = file.name.split(".").pop();
-      const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const fileName = `${folder}/${Date.now()}-${Math.random()
+        .toString(36)
+        .substring(7)}.${fileExt}`;
 
-      const { error: uploadError } = await supabase.storage
+      const { error } = await supabase.storage
         .from("uploads")
-        .upload(fileName, file);
+        .upload(fileName, file, {
+          cacheControl: "3600",
+          upsert: false,
+        });
 
-      if (uploadError) throw uploadError;
+      if (error) throw error;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from("uploads")
-        .getPublicUrl(fileName);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("uploads").getPublicUrl(fileName);
 
       onChange(publicUrl);
       toast.success("Video uploaded successfully");
     } catch (error: any) {
-      toast.error("Failed to upload video: " + error.message);
+      toast.error(error.message || "Upload failed");
     } finally {
       setUploading(false);
-      setUploadProgress(0);
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -63,12 +71,6 @@ const VideoUpload = ({ value, onChange, folder = "videos" }: VideoUploadProps) =
 
   const handleRemove = () => {
     onChange("");
-  };
-
-  const getVideoId = (url: string) => {
-    // Extract filename from URL for display
-    const parts = url.split("/");
-    return parts[parts.length - 1];
   };
 
   return (
@@ -85,12 +87,11 @@ const VideoUpload = ({ value, onChange, folder = "videos" }: VideoUploadProps) =
         <div className="relative group">
           <video
             src={value}
-            className="w-full h-40 object-cover rounded-lg border border-border bg-black"
+            className="w-full h-40 object-cover rounded-lg border bg-black"
             controls
           />
-          <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100">
             <Button
-              type="button"
               size="sm"
               variant="secondary"
               onClick={() => fileInputRef.current?.click()}
@@ -103,12 +104,7 @@ const VideoUpload = ({ value, onChange, folder = "videos" }: VideoUploadProps) =
               )}
               Replace
             </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="destructive"
-              onClick={handleRemove}
-            >
+            <Button size="sm" variant="destructive" onClick={handleRemove}>
               <X className="w-4 h-4" />
               Remove
             </Button>
@@ -119,18 +115,18 @@ const VideoUpload = ({ value, onChange, folder = "videos" }: VideoUploadProps) =
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={uploading}
-          className="w-full h-40 border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center gap-2 hover:border-primary transition-colors cursor-pointer bg-muted/30"
+          className="w-full h-40 border-2 border-dashed rounded-lg flex flex-col items-center justify-center gap-2"
         >
           {uploading ? (
             <>
-              <Loader2 className="w-8 h-8 text-muted-foreground animate-spin" />
-              <span className="text-sm text-muted-foreground font-mono">Uploading...</span>
+              <Loader2 className="w-8 h-8 animate-spin" />
+              <span className="text-sm">Uploading…</span>
             </>
           ) : (
             <>
-              <Video className="w-8 h-8 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground font-mono">Click to upload video</span>
-              <span className="text-xs text-muted-foreground">Max 100MB (MP4, WebM, etc.)</span>
+              <Video className="w-8 h-8" />
+              <span className="text-sm">Click to upload video</span>
+              <span className="text-xs">Max 3GB</span>
             </>
           )}
         </button>
