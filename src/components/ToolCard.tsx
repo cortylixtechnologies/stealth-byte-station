@@ -20,7 +20,7 @@ const ToolCard = ({
   icon, 
   price, 
   url,
-  whatsappNumber = "1234567890" 
+  whatsappNumber = "25562223306" 
 }: ToolCardProps) => {
   const isFree = category === "free";
 
