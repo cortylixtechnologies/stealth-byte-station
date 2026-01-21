@@ -51,7 +51,7 @@ const News = () => {
   return (
     <div className="min-h-screen bg-background matrix-bg">
       <Navbar />
-      <WhatsAppButton phoneNumber="1234567890" />
+      <WhatsAppButton phoneNumber="+25576222330" />
 
       <main className="pt-24 pb-20 px-4">
         <div className="container mx-auto">
