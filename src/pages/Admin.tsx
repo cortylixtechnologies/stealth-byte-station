@@ -14,6 +14,7 @@ import {
   X,
   BookOpen,
   Award,
+  FileWarning,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -25,6 +26,7 @@ import AdminCourses from "@/components/admin/AdminCourses";
 import AdminCourseModules from "@/components/admin/AdminCourseModules";
 import AdminUsers from "@/components/admin/AdminUsers";
 import AdminCertificates from "@/components/admin/AdminCertificates";
+import AdminSecurityLogs from "@/components/admin/AdminSecurityLogs";
 
 const menuItems = [
   { id: "tools", label: "Tools", icon: Wrench },
@@ -34,6 +36,7 @@ const menuItems = [
   { id: "modules", label: "Course Content", icon: BookOpen },
   { id: "certificates", label: "Certificates", icon: Award },
   { id: "users", label: "Users", icon: Users },
+  { id: "security", label: "Security Logs", icon: FileWarning },
 ];
 
 const Admin = () => {
@@ -69,6 +72,8 @@ const Admin = () => {
         return <AdminCertificates />;
       case "users":
         return <AdminUsers />;
+      case "security":
+        return <AdminSecurityLogs />;
       default:
         return <AdminTools />;
     }
