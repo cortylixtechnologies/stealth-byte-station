@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Shield, Terminal, LogOut, User } from "lucide-react";
+import { Menu, X, Shield, Terminal, LogOut, User, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -82,17 +82,24 @@ const Navbar = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48 bg-card border-border">
+                  <DropdownMenuItem asChild>
+                    <Link to="/dashboard" className="font-mono cursor-pointer">
+                      <LayoutDashboard className="w-4 h-4 mr-2 text-primary" />
+                      My Dashboard
+                    </Link>
+                  </DropdownMenuItem>
                   {isAdmin && (
                     <>
+                      <DropdownMenuSeparator />
                       <DropdownMenuItem asChild>
                         <Link to="/admin" className="font-mono cursor-pointer">
                           <Shield className="w-4 h-4 mr-2 text-accent" />
                           Admin Panel
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuSeparator />
                     </>
                   )}
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={handleSignOut}
                     className="font-mono text-destructive focus:text-destructive cursor-pointer"
@@ -151,6 +158,14 @@ const Navbar = () => {
               ))}
               {user ? (
                 <>
+                  <Link to="/dashboard" onClick={() => setIsOpen(false)}>
+                    <Button
+                      variant="outline"
+                      className="w-full mt-2 font-mono border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+                    >
+                      [ MY DASHBOARD ]
+                    </Button>
+                  </Link>
                   {isAdmin && (
                     <Link to="/admin" onClick={() => setIsOpen(false)}>
                       <Button
