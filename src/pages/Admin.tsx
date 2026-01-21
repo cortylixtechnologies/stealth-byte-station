@@ -13,6 +13,7 @@ import {
   Menu,
   X,
   BookOpen,
+  Award,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -23,6 +24,7 @@ import AdminNews from "@/components/admin/AdminNews";
 import AdminCourses from "@/components/admin/AdminCourses";
 import AdminCourseModules from "@/components/admin/AdminCourseModules";
 import AdminUsers from "@/components/admin/AdminUsers";
+import AdminCertificates from "@/components/admin/AdminCertificates";
 
 const menuItems = [
   { id: "tools", label: "Tools", icon: Wrench },
@@ -30,6 +32,7 @@ const menuItems = [
   { id: "news", label: "News", icon: Newspaper },
   { id: "courses", label: "Courses", icon: GraduationCap },
   { id: "modules", label: "Course Content", icon: BookOpen },
+  { id: "certificates", label: "Certificates", icon: Award },
   { id: "users", label: "Users", icon: Users },
 ];
 
@@ -62,6 +65,8 @@ const Admin = () => {
         return <AdminCourses />;
       case "modules":
         return <AdminCourseModules />;
+      case "certificates":
+        return <AdminCertificates />;
       case "users":
         return <AdminUsers />;
       default:

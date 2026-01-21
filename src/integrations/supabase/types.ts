@@ -16,23 +16,32 @@ export type Database = {
     Tables: {
       certificates: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
           certificate_number: string
           course_id: string
           id: string
+          is_approved: boolean
           issued_at: string
           user_id: string
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
           certificate_number: string
           course_id: string
           id?: string
+          is_approved?: boolean
           issued_at?: string
           user_id: string
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
           certificate_number?: string
           course_id?: string
           id?: string
+          is_approved?: boolean
           issued_at?: string
           user_id?: string
         }
