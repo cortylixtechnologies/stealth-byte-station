@@ -12,6 +12,7 @@ import {
   Github,
   Chrome,
   Loader2,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,10 +22,17 @@ import GlitchText from "@/components/GlitchText";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { z } from "zod";
+import { supabase } from "@/integrations/supabase/client";
 
 const emailSchema = z.string().email("Invalid email address");
 const passwordSchema = z.string().min(6, "Password must be at least 6 characters");
 const usernameSchema = z.string().min(3, "Username must be at least 3 characters").optional();
+
+interface RateLimitStatus {
+  isBlocked: boolean;
+  attemptsRemaining: number;
+  blockedUntil: string | null;
+}
 
 const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -34,6 +42,7 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const [errors, setErrors] = useState<{ email?: string; password?: string; username?: string }>({});
+  const [rateLimitStatus, setRateLimitStatus] = useState<RateLimitStatus | null>(null);
 
   const { signIn, signUp, user, isAdmin } = useAuth();
   const navigate = useNavigate();
@@ -47,6 +56,34 @@ const Auth = () => {
       }
     }
   }, [user, isAdmin, navigate]);
+
+  const checkRateLimit = async (emailToCheck: string): Promise<RateLimitStatus | null> => {
+    try {
+      const { data, error } = await supabase.functions.invoke("check-rate-limit", {
+        body: { email: emailToCheck, action: "check" },
+      });
+
+      if (error) {
+        console.error("Rate limit check failed:", error);
+        return null;
+      }
+
+      return data as RateLimitStatus;
+    } catch (err) {
+      console.error("Rate limit check error:", err);
+      return null;
+    }
+  };
+
+  const recordLoginAttempt = async (emailToRecord: string, success: boolean) => {
+    try {
+      await supabase.functions.invoke("check-rate-limit", {
+        body: { email: emailToRecord, action: "record", success },
+      });
+    } catch (err) {
+      console.error("Failed to record login attempt:", err);
+    }
+  };
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string; username?: string } = {};
@@ -77,20 +114,45 @@ const Auth = () => {
     if (!validateForm()) return;
 
     setLoading(true);
+
+    // Check rate limit before attempting login
+    const rateLimit = await checkRateLimit(email);
+    if (rateLimit?.isBlocked) {
+      setRateLimitStatus(rateLimit);
+      const blockedUntil = rateLimit.blockedUntil 
+        ? new Date(rateLimit.blockedUntil).toLocaleTimeString() 
+        : "15 minutes";
+      toast.error(`Too many failed attempts. Try again after ${blockedUntil}`);
+      setLoading(false);
+      return;
+    }
+
     const { error } = await signIn(email, password);
-    setLoading(false);
 
     if (error) {
+      // Record failed attempt
+      await recordLoginAttempt(email, false);
+      
+      // Update rate limit status
+      const updatedRateLimit = await checkRateLimit(email);
+      setRateLimitStatus(updatedRateLimit);
+
       if (error.message.includes("Invalid login credentials")) {
-        toast.error("Invalid email or password");
+        const remaining = updatedRateLimit?.attemptsRemaining ?? "few";
+        toast.error(`Invalid email or password. ${remaining} attempts remaining.`);
       } else if (error.message.includes("Email not confirmed")) {
         toast.error("Please confirm your email address");
       } else {
         toast.error(error.message);
       }
     } else {
+      // Record successful attempt
+      await recordLoginAttempt(email, true);
+      setRateLimitStatus(null);
       toast.success("Welcome back!");
     }
+
+    setLoading(false);
   };
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -169,6 +231,29 @@ const Auth = () => {
                   className="space-y-4"
                   onSubmit={handleLogin}
                 >
+                  {/* Rate Limit Warning */}
+                  {rateLimitStatus && (rateLimitStatus.isBlocked || rateLimitStatus.attemptsRemaining <= 2) && (
+                    <div className={`p-3 rounded-lg border font-mono text-sm flex items-center gap-2 ${
+                      rateLimitStatus.isBlocked 
+                        ? "bg-destructive/10 border-destructive/50 text-destructive" 
+                        : "bg-yellow-500/10 border-yellow-500/50 text-yellow-400"
+                    }`}>
+                      <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                      {rateLimitStatus.isBlocked ? (
+                        <span>
+                          Account temporarily locked. Try again after{" "}
+                          {rateLimitStatus.blockedUntil 
+                            ? new Date(rateLimitStatus.blockedUntil).toLocaleTimeString()
+                            : "15 minutes"}
+                        </span>
+                      ) : (
+                        <span>
+                          Warning: {rateLimitStatus.attemptsRemaining} attempt{rateLimitStatus.attemptsRemaining !== 1 ? "s" : ""} remaining
+                        </span>
+                      )}
+                    </div>
+                  )}
+
                   <div className="space-y-2">
                     <Label htmlFor="email" className="font-mono text-sm">
                       Email
@@ -182,6 +267,7 @@ const Auth = () => {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="pl-10 font-mono bg-input border-border focus:border-primary focus:ring-primary"
+                        disabled={rateLimitStatus?.isBlocked}
                       />
                     </div>
                     {errors.email && (
@@ -202,6 +288,7 @@ const Auth = () => {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         className="pl-10 pr-10 font-mono bg-input border-border focus:border-primary focus:ring-primary"
+                        disabled={rateLimitStatus?.isBlocked}
                       />
                       <button
                         type="button"
@@ -222,7 +309,7 @@ const Auth = () => {
 
                   <Button
                     type="submit"
-                    disabled={loading}
+                    disabled={loading || rateLimitStatus?.isBlocked}
                     className="w-full font-mono bg-primary text-primary-foreground hover:bg-primary/90 shadow-neon-cyan"
                   >
                     {loading ? (
@@ -230,7 +317,7 @@ const Auth = () => {
                     ) : (
                       <Terminal className="w-4 h-4 mr-2" />
                     )}
-                    {loading ? "Logging in..." : "Login"}
+                    {loading ? "Logging in..." : rateLimitStatus?.isBlocked ? "Account Locked" : "Login"}
                   </Button>
                 </motion.form>
               </TabsContent>

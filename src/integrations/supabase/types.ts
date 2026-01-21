@@ -276,6 +276,30 @@ export type Database = {
           },
         ]
       }
+      login_attempts: {
+        Row: {
+          attempted_at: string
+          email: string
+          id: string
+          ip_address: string | null
+          success: boolean
+        }
+        Insert: {
+          attempted_at?: string
+          email: string
+          id?: string
+          ip_address?: string | null
+          success?: boolean
+        }
+        Update: {
+          attempted_at?: string
+          email?: string
+          id?: string
+          ip_address?: string | null
+          success?: boolean
+        }
+        Relationships: []
+      }
       news: {
         Row: {
           author: string | null
@@ -488,6 +512,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_rate_limit: {
+        Args: {
+          _email: string
+          _ip_address?: string
+          _max_attempts?: number
+          _window_minutes?: number
+        }
+        Returns: {
+          attempts_remaining: number
+          blocked_until: string
+          is_blocked: boolean
+        }[]
+      }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
@@ -509,6 +546,10 @@ export type Database = {
           _user_id: string
         }
         Returns: string
+      }
+      record_login_attempt: {
+        Args: { _email: string; _ip_address?: string; _success?: boolean }
+        Returns: undefined
       }
     }
     Enums: {
