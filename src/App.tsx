@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
+
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Tools from "./pages/Tools";
@@ -17,31 +18,106 @@ import About from "./pages/About";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
+import React, { useEffect, useState } from "react";
+
+// ------------------ CYBER NINJA TERMINAL ------------------
+const CyberNinjaTerminal: React.FC = () => {
+  const messages = [
+    "[CYBER NINJA] Initializing digital shadows...",
+    "[CYBER NINJA] Website is under development...",
+    "[CYBER NINJA] Stay updated for new cyber missions...",
+  ];
+
+  const [displayed, setDisplayed] = useState<string[]>([]);
+  const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
+  const [charIndex, setCharIndex] = useState(0);
+
+  useEffect(() => {
+    if (currentMessageIndex >= messages.length) return;
+
+    const timeout = setTimeout(() => {
+      setDisplayed((prev) => {
+        const newLines = [...prev];
+        if (!newLines[currentMessageIndex]) newLines[currentMessageIndex] = "";
+        newLines[currentMessageIndex] += messages[currentMessageIndex][charIndex];
+        return newLines;
+      });
+
+      if (charIndex + 1 === messages[currentMessageIndex].length) {
+        setCurrentMessageIndex((prev) => prev + 1);
+        setCharIndex(0);
+      } else {
+        setCharIndex((prev) => prev + 1);
+      }
+    }, 50);
+
+    return () => clearTimeout(timeout);
+  }, [charIndex, currentMessageIndex]);
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "100vw",
+        height: "100vh",
+        backgroundColor: "#000",
+        color: "#0f0",
+        fontFamily: "monospace",
+        padding: "2rem",
+        overflow: "hidden",
+      }}
+    >
+      {displayed.map((line, i) => (
+        <div key={i}>{line}</div>
+      ))}
+      <span style={{ animation: "blink 1s infinite" }}>█</span>
+      <style>
+        {`
+          @keyframes blink {
+            0%, 50%, 100% { opacity: 1; }
+            25%, 75% { opacity: 0; }
+          }
+        `}
+      </style>
+    </div>
+  );
+};
+// ------------------------------------------------------------------
+
 const queryClient = new QueryClient();
 
-const App = () => (
+// Toggle to show the hacker terminal splash
+const SHOW_CYBER_NINJA_TERMINAL = true;
+
+const App: React.FC = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/tools" element={<Tools />} />
-            <Route path="/videos" element={<Videos />} />
-            <Route path="/news" element={<News />} />
-            <Route path="/courses" element={<Courses />} />
-            <Route path="/courses/:id" element={<CourseDetail />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/admin" element={<Admin />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
-      </BrowserRouter>
+      {SHOW_CYBER_NINJA_TERMINAL ? (
+        <CyberNinjaTerminal />
+      ) : (
+        <BrowserRouter>
+          <AuthProvider>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/tools" element={<Tools />} />
+              <Route path="/videos" element={<Videos />} />
+              <Route path="/news" element={<News />} />
+              <Route path="/courses" element={<Courses />} />
+              <Route path="/courses/:id" element={<CourseDetail />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AuthProvider>
+        </BrowserRouter>
+      )}
     </TooltipProvider>
   </QueryClientProvider>
 );
