@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -18,8 +19,6 @@ import About from "./pages/About";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
-import React, { useEffect, useState } from "react";
-
 // ------------------ CYBER NINJA TERMINAL ------------------
 const CyberNinjaTerminal: React.FC = () => {
   const messages = [
@@ -33,13 +32,25 @@ const CyberNinjaTerminal: React.FC = () => {
   const [charIndex, setCharIndex] = useState(0);
 
   useEffect(() => {
-    if (currentMessageIndex >= messages.length) return;
+    let timeout: NodeJS.Timeout;
 
-    const timeout = setTimeout(() => {
+    // Restart animation after last message
+    if (currentMessageIndex >= messages.length) {
+      timeout = setTimeout(() => {
+        setDisplayed([]);
+        setCurrentMessageIndex(0);
+        setCharIndex(0);
+      }, 1500); // pause before restarting
+
+      return () => clearTimeout(timeout);
+    }
+
+    timeout = setTimeout(() => {
       setDisplayed((prev) => {
         const newLines = [...prev];
         if (!newLines[currentMessageIndex]) newLines[currentMessageIndex] = "";
-        newLines[currentMessageIndex] += messages[currentMessageIndex][charIndex];
+        newLines[currentMessageIndex] +=
+          messages[currentMessageIndex][charIndex];
         return newLines;
       });
 
@@ -49,7 +60,7 @@ const CyberNinjaTerminal: React.FC = () => {
       } else {
         setCharIndex((prev) => prev + 1);
       }
-    }, 50);
+    }, 50); // typing speed
 
     return () => clearTimeout(timeout);
   }, [charIndex, currentMessageIndex]);
@@ -58,21 +69,20 @@ const CyberNinjaTerminal: React.FC = () => {
     <div
       style={{
         position: "fixed",
-        top: 0,
-        left: 0,
-        width: "100vw",
-        height: "100vh",
+        inset: 0,
         backgroundColor: "#000",
-        color: "#0f0",
+        color: "#00ff00",
         fontFamily: "monospace",
         padding: "2rem",
         overflow: "hidden",
+        zIndex: 9999,
       }}
     >
       {displayed.map((line, i) => (
         <div key={i}>{line}</div>
       ))}
       <span style={{ animation: "blink 1s infinite" }}>█</span>
+
       <style>
         {`
           @keyframes blink {
@@ -84,11 +94,11 @@ const CyberNinjaTerminal: React.FC = () => {
     </div>
   );
 };
-// ------------------------------------------------------------------
+// --------------------------------------------------------
 
 const queryClient = new QueryClient();
 
-// Toggle to show the hacker terminal splash
+// Toggle terminal splash
 const SHOW_CYBER_NINJA_TERMINAL = true;
 
 const App: React.FC = () => (
@@ -96,6 +106,7 @@ const App: React.FC = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+
       {SHOW_CYBER_NINJA_TERMINAL ? (
         <CyberNinjaTerminal />
       ) : (
