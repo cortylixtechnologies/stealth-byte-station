@@ -19,51 +19,114 @@ import About from "./pages/About";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
-// ------------------ CYBER NINJA TERMINAL ------------------
+// ================== CYBER NINJA TERMINAL ==================
 const CyberNinjaTerminal: React.FC = () => {
-  const messages = [
-    "[CYBER NINJA] Initializing digital shadows...",
-    "[CYBER NINJA] Website is under development...",
-    "[CYBER NINJA] Stay updated for new cyber missions...",
+  const bootMessages = [
+    "Initializing digital shadows...",
+    "Loading cyber modules...",
+    "Establishing secure shell...",
+    "Bypassing firewall...",
+    "System online.",
   ];
 
-  const [displayed, setDisplayed] = useState<string[]>([]);
-  const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
+  const [lines, setLines] = useState<string[]>([]);
+  const [input, setInput] = useState("");
+  const [bootIndex, setBootIndex] = useState(0);
   const [charIndex, setCharIndex] = useState(0);
+  const [booting, setBooting] = useState(true);
 
+  // -------- BOOT SEQUENCE (INFINITE) --------
   useEffect(() => {
-    let timeout: NodeJS.Timeout;
+    if (!booting) return;
 
-    // Restart animation after last message
-    if (currentMessageIndex >= messages.length) {
-      timeout = setTimeout(() => {
-        setDisplayed([]);
-        setCurrentMessageIndex(0);
-        setCharIndex(0);
-      }, 1500); // pause before restarting
+    const speed = 25 + Math.random() * 75;
 
-      return () => clearTimeout(timeout);
-    }
-
-    timeout = setTimeout(() => {
-      setDisplayed((prev) => {
-        const newLines = [...prev];
-        if (!newLines[currentMessageIndex]) newLines[currentMessageIndex] = "";
-        newLines[currentMessageIndex] +=
-          messages[currentMessageIndex][charIndex];
-        return newLines;
+    const timeout = setTimeout(() => {
+      setLines((prev) => {
+        const updated = [...prev];
+        if (!updated[bootIndex]) updated[bootIndex] = "";
+        updated[bootIndex] += bootMessages[bootIndex][charIndex];
+        return updated;
       });
 
-      if (charIndex + 1 === messages[currentMessageIndex].length) {
-        setCurrentMessageIndex((prev) => prev + 1);
-        setCharIndex(0);
+      if (charIndex + 1 === bootMessages[bootIndex].length) {
+        if (bootIndex + 1 === bootMessages.length) {
+          setTimeout(() => setBooting(false), 500);
+        } else {
+          setBootIndex((i) => i + 1);
+          setCharIndex(0);
+        }
       } else {
-        setCharIndex((prev) => prev + 1);
+        setCharIndex((c) => c + 1);
       }
-    }, 50); // typing speed
+    }, speed);
 
     return () => clearTimeout(timeout);
-  }, [charIndex, currentMessageIndex]);
+  }, [bootIndex, charIndex, booting]);
+
+  // -------- COMMAND HANDLER --------
+  const runCommand = (cmd: string) => {
+    const command = cmd.toLowerCase().trim();
+    let output: string[] = [];
+
+    switch (command) {
+      case "help":
+        output = [
+          "Available commands:",
+          "help        show commands",
+          "whoami      identify user",
+          "status      system status",
+          "connect     establish link",
+          "clear       clear terminal",
+          "exit        reboot system",
+        ];
+        break;
+
+      case "whoami":
+        output = ["CYBER_NINJA // root access granted"];
+        break;
+
+      case "status":
+        output = [
+          "CPU  ████████░░ 81%",
+          "RAM  ██████░░░░ 63%",
+          "NET  ENCRYPTED",
+        ];
+        break;
+
+      case "connect":
+        output = [
+          "Resolving node...",
+          "Injecting payload...",
+          "Connection established ✔",
+        ];
+        break;
+
+      case "clear":
+        setLines([]);
+        return;
+
+      case "exit":
+        setLines([]);
+        setBootIndex(0);
+        setCharIndex(0);
+        setBooting(true);
+        return;
+
+      default:
+        output = [`Command not found: ${command}`];
+    }
+
+    setLines((prev) => [...prev, `> ${cmd}`, ...output]);
+  };
+
+  // -------- INPUT --------
+  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && input.trim()) {
+      runCommand(input);
+      setInput("");
+    }
+  };
 
   return (
     <div
@@ -76,12 +139,44 @@ const CyberNinjaTerminal: React.FC = () => {
         padding: "2rem",
         overflow: "hidden",
         zIndex: 9999,
+        textShadow: "0 0 5px #00ff00, 0 0 12px #00ff00",
       }}
     >
-      {displayed.map((line, i) => (
+      {/* CRT Scanlines */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          pointerEvents: "none",
+          background:
+            "repeating-linear-gradient(to bottom, rgba(0,255,0,0.04), rgba(0,255,0,0.04) 1px, transparent 2px, transparent 4px)",
+        }}
+      />
+
+      {lines.map((line, i) => (
         <div key={i}>{line}</div>
       ))}
-      <span style={{ animation: "blink 1s infinite" }}>█</span>
+
+      {!booting && (
+        <div>
+          <span style={{ color: "#00ffaa" }}>{"> "}</span>
+          <input
+            autoFocus
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={onKeyDown}
+            style={{
+              background: "transparent",
+              border: "none",
+              outline: "none",
+              color: "#00ff00",
+              fontFamily: "monospace",
+              width: "80%",
+            }}
+          />
+          <span style={{ animation: "blink 1s infinite" }}>█</span>
+        </div>
+      )}
 
       <style>
         {`
@@ -94,11 +189,9 @@ const CyberNinjaTerminal: React.FC = () => {
     </div>
   );
 };
-// --------------------------------------------------------
+// =========================================================
 
 const queryClient = new QueryClient();
-
-// Toggle terminal splash
 const SHOW_CYBER_NINJA_TERMINAL = true;
 
 const App: React.FC = () => (
