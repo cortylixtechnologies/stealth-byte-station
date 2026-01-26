@@ -192,7 +192,7 @@ const CyberNinjaTerminal: React.FC = () => {
 // =========================================================
 
 const queryClient = new QueryClient();
-const SHOW_CYBER_NINJA_TERMINAL = true;
+const SHOW_CYBER_NINJA_TERMINAL = false;
 
 const App: React.FC = () => (
   <QueryClientProvider client={queryClient}>
