@@ -22,7 +22,7 @@ const ToolCard = ({
   icon, 
   price, 
   url,
-  whatsappNumber = "25562223306" 
+  whatsappNumber = "255762223306" 
 }: ToolCardProps) => {
   const [expanded, setExpanded] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
