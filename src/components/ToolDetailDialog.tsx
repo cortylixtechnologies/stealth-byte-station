@@ -30,7 +30,7 @@ const ToolDetailDialog = ({
   icon,
   price,
   url,
-  whatsappNumber = "25562223306",
+  whatsappNumber = "255762223306",
 }: ToolDetailDialogProps) => {
   const isFree = category === "free";
 
