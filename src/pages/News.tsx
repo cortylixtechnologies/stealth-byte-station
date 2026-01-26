@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Newspaper, Loader2 } from "lucide-react";
+import { Newspaper, Loader2, ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SectionHeader from "@/components/SectionHeader";
 import NewsCard from "@/components/NewsCard";
+import NewsDetailDialog from "@/components/NewsDetailDialog";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -23,6 +25,7 @@ interface NewsArticle {
 const News = () => {
   const [news, setNews] = useState<NewsArticle[]>([]);
   const [loading, setLoading] = useState(true);
+  const [featuredDialogOpen, setFeaturedDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchNews();
@@ -103,15 +106,35 @@ const News = () => {
                         <h3 className="font-mono text-2xl font-bold text-foreground mb-4">
                           {featuredArticle.title}
                         </h3>
-                        <p className="text-muted-foreground mb-4">
+                        <p className="text-muted-foreground mb-4 line-clamp-3">
                           {featuredArticle.summary}
                         </p>
-                        <p className="text-sm text-muted-foreground font-mono">
-                          {format(new Date(featuredArticle.published_at), "MMMM d, yyyy")}
-                        </p>
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm text-muted-foreground font-mono">
+                            {format(new Date(featuredArticle.published_at), "MMMM d, yyyy")}
+                          </p>
+                          <Button
+                            onClick={() => setFeaturedDialogOpen(true)}
+                            variant="ghost"
+                            className="font-mono text-primary hover:text-primary hover:bg-primary/10"
+                          >
+                            Read More <ArrowRight className="w-4 h-4 ml-2" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
+
+                  <NewsDetailDialog
+                    open={featuredDialogOpen}
+                    onOpenChange={setFeaturedDialogOpen}
+                    title={featuredArticle.title}
+                    summary={featuredArticle.summary || ""}
+                    content={featuredArticle.content || ""}
+                    date={format(new Date(featuredArticle.published_at), "MMMM d, yyyy")}
+                    author={featuredArticle.author}
+                    image={featuredArticle.image_url}
+                  />
                 </motion.div>
               )}
 
@@ -127,7 +150,9 @@ const News = () => {
                     <NewsCard
                       title={article.title}
                       summary={article.summary || ""}
+                      content={article.content || ""}
                       date={format(new Date(article.published_at), "MMMM d, yyyy")}
+                      author={article.author}
                       image={article.image_url || "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800"}
                     />
                   </motion.div>
