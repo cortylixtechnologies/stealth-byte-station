@@ -1,5 +1,6 @@
-import { motion } from "framer-motion";
-import { ExternalLink, Lock, Unlock, MessageCircle } from "lucide-react";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ExternalLink, Lock, Unlock, MessageCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -22,7 +23,12 @@ const ToolCard = ({
   url,
   whatsappNumber = "25562223306" 
 }: ToolCardProps) => {
+  const [expanded, setExpanded] = useState(false);
   const isFree = category === "free";
+  const shouldTruncate = description.length > 80;
+  const displayDescription = expanded || !shouldTruncate 
+    ? description 
+    : description.slice(0, 80) + "...";
 
   const handleClick = () => {
     if (isFree && url) {
@@ -79,7 +85,43 @@ const ToolCard = ({
       <h3 className="font-mono text-lg font-bold text-foreground mb-2">
         {name}
       </h3>
-      <p className="text-muted-foreground text-sm mb-4">{description}</p>
+      
+      <div className="mb-4">
+        <AnimatePresence mode="wait">
+          <motion.p
+            key={expanded ? "expanded" : "collapsed"}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="text-muted-foreground text-sm"
+          >
+            {displayDescription}
+          </motion.p>
+        </AnimatePresence>
+        
+        {shouldTruncate && (
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className={`mt-2 text-xs font-mono flex items-center gap-1 transition-colors ${
+              isFree 
+                ? "text-secondary hover:text-secondary/80" 
+                : "text-accent hover:text-accent/80"
+            }`}
+          >
+            {expanded ? (
+              <>
+                <ChevronUp className="w-3 h-3" />
+                Show Less
+              </>
+            ) : (
+              <>
+                <ChevronDown className="w-3 h-3" />
+                Read More
+              </>
+            )}
+          </button>
+        )}
+      </div>
 
       <Button
         onClick={handleClick}

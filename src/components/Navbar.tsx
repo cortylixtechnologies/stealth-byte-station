@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Shield, Terminal, LogOut, User, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import ThemeToggle from "@/components/ThemeToggle";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -66,8 +67,9 @@ const Navbar = () => {
             ))}
           </div>
 
-          {/* Auth Button */}
+          {/* Theme Toggle & Auth Button */}
           <div className="hidden md:flex items-center gap-3">
+            <ThemeToggle />
             {loading ? (
               <div className="w-24 h-9 bg-muted animate-pulse rounded-md" />
             ) : user ? (

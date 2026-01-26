@@ -33,10 +33,19 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get client IP from headers
-    const ipAddress = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || 
-                      req.headers.get("x-real-ip") || 
-                      "unknown";
+    // Get client IP from headers - check multiple sources for accuracy
+    // Priority: CF-Connecting-IP (Cloudflare) > X-Real-IP > X-Forwarded-For > connection remote addr
+    const ipAddress = 
+      req.headers.get("cf-connecting-ip") ||
+      req.headers.get("x-real-ip") ||
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      req.headers.get("true-client-ip") ||
+      req.headers.get("x-client-ip") ||
+      "unknown";
+    
+    // Get additional client info for better tracking
+    const userAgent = req.headers.get("user-agent") || "unknown";
+    const country = req.headers.get("cf-ipcountry") || req.headers.get("x-vercel-ip-country") || "unknown";
 
     if (action === "check") {
       // Check rate limit
@@ -83,15 +92,33 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Log to security_logs for failed attempts
+      // Log to security_logs for failed attempts with enhanced metadata
       if (!success) {
         await supabase.rpc("log_security_event", {
           _user_id: null,
           _event_type: "login_failed",
           _event_description: `Failed login attempt for email: ${email}`,
           _ip_address: ipAddress,
-          _user_agent: req.headers.get("user-agent"),
-          _metadata: { email: email.toLowerCase() },
+          _user_agent: userAgent,
+          _metadata: { 
+            email: email.toLowerCase(),
+            country: country,
+            timestamp: new Date().toISOString(),
+          },
+        });
+      } else {
+        // Also log successful logins
+        await supabase.rpc("log_security_event", {
+          _user_id: null,
+          _event_type: "login_success",
+          _event_description: `Successful login for email: ${email}`,
+          _ip_address: ipAddress,
+          _user_agent: userAgent,
+          _metadata: { 
+            email: email.toLowerCase(),
+            country: country,
+            timestamp: new Date().toISOString(),
+          },
         });
       }
 
