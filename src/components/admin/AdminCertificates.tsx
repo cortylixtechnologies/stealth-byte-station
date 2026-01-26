@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Award, CheckCircle, XCircle, Loader2, Eye } from "lucide-react";
+import { Search, Award, CheckCircle, XCircle, Loader2, Eye, Plus, User, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -15,6 +15,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -33,21 +42,38 @@ interface CertificateWithDetails {
   user_email: string;
 }
 
+interface CompletedEnrollment {
+  id: string;
+  user_id: string;
+  course_id: string;
+  completed_at: string;
+  course_title: string;
+  user_name: string;
+  has_certificate: boolean;
+}
+
 const AdminCertificates = () => {
   const [certificates, setCertificates] = useState<CertificateWithDetails[]>([]);
+  const [completedEnrollments, setCompletedEnrollments] = useState<CompletedEnrollment[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<"all" | "pending" | "approved">("all");
   const [selectedCertificate, setSelectedCertificate] = useState<CertificateWithDetails | null>(null);
+  const [creatingCert, setCreatingCert] = useState<string | null>(null);
   const { user } = useAuth();
 
   useEffect(() => {
-    fetchCertificates();
+    fetchData();
   }, []);
+
+  const fetchData = async () => {
+    setLoading(true);
+    await Promise.all([fetchCertificates(), fetchCompletedEnrollments()]);
+    setLoading(false);
+  };
 
   const fetchCertificates = async () => {
     try {
-      // Fetch certificates
       const { data: certsData, error: certsError } = await supabase
         .from("certificates")
         .select("*")
@@ -55,21 +81,18 @@ const AdminCertificates = () => {
 
       if (certsError) throw certsError;
 
-      // Fetch courses
       const { data: coursesData, error: coursesError } = await supabase
         .from("courses")
         .select("id, title");
 
       if (coursesError) throw coursesError;
 
-      // Fetch profiles
       const { data: profilesData, error: profilesError } = await supabase
         .from("profiles")
         .select("user_id, username, full_name");
 
       if (profilesError) throw profilesError;
 
-      // Combine data
       const combinedCerts: CertificateWithDetails[] = (certsData || []).map((cert) => {
         const course = coursesData?.find((c) => c.id === cert.course_id);
         const profile = profilesData?.find((p) => p.user_id === cert.user_id);
@@ -91,8 +114,91 @@ const AdminCertificates = () => {
       setCertificates(combinedCerts);
     } catch (error: any) {
       toast.error("Failed to fetch certificates: " + error.message);
+    }
+  };
+
+  const fetchCompletedEnrollments = async () => {
+    try {
+      const { data: enrollmentsData, error: enrollmentsError } = await supabase
+        .from("course_enrollments")
+        .select("*")
+        .eq("is_completed", true)
+        .order("completed_at", { ascending: false });
+
+      if (enrollmentsError) throw enrollmentsError;
+
+      const { data: coursesData, error: coursesError } = await supabase
+        .from("courses")
+        .select("id, title");
+
+      if (coursesError) throw coursesError;
+
+      const { data: profilesData, error: profilesError } = await supabase
+        .from("profiles")
+        .select("user_id, username, full_name");
+
+      if (profilesError) throw profilesError;
+
+      const { data: certsData, error: certsError } = await supabase
+        .from("certificates")
+        .select("user_id, course_id");
+
+      if (certsError) throw certsError;
+
+      const completedWithDetails: CompletedEnrollment[] = (enrollmentsData || []).map((enrollment) => {
+        const course = coursesData?.find((c) => c.id === enrollment.course_id);
+        const profile = profilesData?.find((p) => p.user_id === enrollment.user_id);
+        const hasCert = certsData?.some(
+          (cert) => cert.user_id === enrollment.user_id && cert.course_id === enrollment.course_id
+        );
+
+        return {
+          id: enrollment.id,
+          user_id: enrollment.user_id,
+          course_id: enrollment.course_id,
+          completed_at: enrollment.completed_at || enrollment.enrolled_at,
+          course_title: course?.title || "Unknown Course",
+          user_name: profile?.full_name || profile?.username || "Unknown User",
+          has_certificate: hasCert || false,
+        };
+      });
+
+      setCompletedEnrollments(completedWithDetails);
+    } catch (error: any) {
+      toast.error("Failed to fetch enrollments: " + error.message);
+    }
+  };
+
+  const generateCertificateNumber = () => {
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+    return `CERT-${year}${month}-${random}`;
+  };
+
+  const allocateCertificate = async (enrollment: CompletedEnrollment) => {
+    setCreatingCert(enrollment.id);
+    try {
+      const certificateNumber = generateCertificateNumber();
+      
+      const { error } = await supabase.from("certificates").insert({
+        user_id: enrollment.user_id,
+        course_id: enrollment.course_id,
+        certificate_number: certificateNumber,
+        is_approved: true,
+        approved_at: new Date().toISOString(),
+        approved_by: user?.id,
+      });
+
+      if (error) throw error;
+
+      toast.success(`Certificate allocated to ${enrollment.user_name}!`);
+      fetchData();
+    } catch (error: any) {
+      toast.error("Failed to allocate certificate: " + error.message);
     } finally {
-      setLoading(false);
+      setCreatingCert(null);
     }
   };
 
@@ -152,7 +258,13 @@ const AdminCertificates = () => {
     return matchesSearch && matchesFilter;
   });
 
+  const filteredEnrollments = completedEnrollments.filter((enrollment) =>
+    enrollment.user_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    enrollment.course_title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   const pendingCount = certificates.filter((c) => !c.is_approved).length;
+  const noCertCount = completedEnrollments.filter((e) => !e.has_certificate).length;
 
   return (
     <div className="space-y-6">
@@ -161,11 +273,18 @@ const AdminCertificates = () => {
           <h1 className="text-2xl font-mono font-bold text-foreground">
             Manage Certificates
           </h1>
-          {pendingCount > 0 && (
-            <p className="text-sm text-accent font-mono mt-1">
-              {pendingCount} certificate{pendingCount > 1 ? "s" : ""} pending approval
-            </p>
-          )}
+          <div className="flex gap-4 mt-1">
+            {pendingCount > 0 && (
+              <p className="text-sm text-accent font-mono">
+                {pendingCount} pending approval
+              </p>
+            )}
+            {noCertCount > 0 && (
+              <p className="text-sm text-primary font-mono">
+                {noCertCount} completed without certificate
+              </p>
+            )}
+          </div>
         </div>
       </div>
 
@@ -195,88 +314,183 @@ const AdminCertificates = () => {
         <div className="flex justify-center py-12">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
-      ) : filteredCertificates.length === 0 ? (
-        <div className="text-center py-12">
-          <Award className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground font-mono">No certificates found</p>
-        </div>
       ) : (
-        <div className="grid gap-4">
-          {filteredCertificates.map((cert) => (
-            <div
-              key={cert.id}
-              className={`cyber-card border p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${
-                cert.is_approved ? "border-secondary/50" : "border-accent/50"
-              }`}
-            >
-              <div className="flex items-start gap-4">
-                <div
-                  className={`p-3 rounded-lg ${
-                    cert.is_approved ? "bg-secondary/20" : "bg-accent/20"
-                  }`}
-                >
-                  <Award
-                    className={`w-6 h-6 ${
-                      cert.is_approved ? "text-secondary" : "text-accent"
-                    }`}
-                  />
-                </div>
-                <div>
-                  <h3 className="font-mono font-bold text-foreground">
-                    {cert.user_name}
-                  </h3>
-                  <p className="text-sm text-muted-foreground font-mono">
-                    {cert.course_title}
-                  </p>
-                  <p className="text-xs text-muted-foreground font-mono mt-1">
-                    #{cert.certificate_number} • Completed{" "}
-                    {format(new Date(cert.issued_at), "MMM dd, yyyy")}
-                  </p>
-                </div>
+        <Tabs defaultValue="certificates" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-4">
+            <TabsTrigger value="certificates" className="font-mono">
+              <Award className="w-4 h-4 mr-2" />
+              Certificates ({certificates.length})
+            </TabsTrigger>
+            <TabsTrigger value="completions" className="font-mono">
+              <GraduationCap className="w-4 h-4 mr-2" />
+              Course Completions ({completedEnrollments.length})
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="certificates">
+            {filteredCertificates.length === 0 ? (
+              <div className="text-center py-12">
+                <Award className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground font-mono">No certificates found</p>
               </div>
-              <div className="flex items-center gap-2 w-full sm:w-auto">
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-mono ${
-                    cert.is_approved
-                      ? "bg-secondary/20 text-secondary"
-                      : "bg-accent/20 text-accent"
-                  }`}
-                >
-                  {cert.is_approved ? "Approved" : "Pending"}
-                </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setSelectedCertificate(cert)}
-                  className="font-mono"
-                >
-                  <Eye className="w-4 h-4 mr-1" />
-                  View
-                </Button>
-                {!cert.is_approved ? (
-                  <Button
-                    size="sm"
-                    onClick={() => approveCertificate(cert.id)}
-                    className="bg-secondary text-secondary-foreground hover:bg-secondary/80 font-mono"
-                  >
-                    <CheckCircle className="w-4 h-4 mr-1" />
-                    Approve
-                  </Button>
-                ) : (
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => revokeCertificate(cert.id)}
-                    className="font-mono"
-                  >
-                    <XCircle className="w-4 h-4 mr-1" />
-                    Revoke
-                  </Button>
-                )}
+            ) : (
+              <div className="border border-border rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50">
+                      <TableHead className="font-mono">Student</TableHead>
+                      <TableHead className="font-mono">Course</TableHead>
+                      <TableHead className="font-mono">Certificate #</TableHead>
+                      <TableHead className="font-mono">Issued</TableHead>
+                      <TableHead className="font-mono">Status</TableHead>
+                      <TableHead className="font-mono text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredCertificates.map((cert) => (
+                      <TableRow key={cert.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <div className="p-2 rounded-full bg-primary/10">
+                              <User className="w-4 h-4 text-primary" />
+                            </div>
+                            <span className="font-mono font-medium">{cert.user_name}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-mono text-muted-foreground">
+                          {cert.course_title}
+                        </TableCell>
+                        <TableCell className="font-mono text-xs">
+                          #{cert.certificate_number}
+                        </TableCell>
+                        <TableCell className="font-mono text-sm text-muted-foreground">
+                          {format(new Date(cert.issued_at), "MMM dd, yyyy")}
+                        </TableCell>
+                        <TableCell>
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-mono ${
+                              cert.is_approved
+                                ? "bg-secondary/20 text-secondary"
+                                : "bg-accent/20 text-accent"
+                            }`}
+                          >
+                            {cert.is_approved ? "Approved" : "Pending"}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setSelectedCertificate(cert)}
+                              className="font-mono"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                            {!cert.is_approved ? (
+                              <Button
+                                size="sm"
+                                onClick={() => approveCertificate(cert.id)}
+                                className="bg-secondary text-secondary-foreground hover:bg-secondary/80 font-mono"
+                              >
+                                <CheckCircle className="w-4 h-4" />
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => revokeCertificate(cert.id)}
+                                className="font-mono"
+                              >
+                                <XCircle className="w-4 h-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
-            </div>
-          ))}
-        </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="completions">
+            {filteredEnrollments.length === 0 ? (
+              <div className="text-center py-12">
+                <GraduationCap className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground font-mono">No completed courses found</p>
+              </div>
+            ) : (
+              <div className="border border-border rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50">
+                      <TableHead className="font-mono">Student</TableHead>
+                      <TableHead className="font-mono">Course</TableHead>
+                      <TableHead className="font-mono">Completed</TableHead>
+                      <TableHead className="font-mono">Certificate Status</TableHead>
+                      <TableHead className="font-mono text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredEnrollments.map((enrollment) => (
+                      <TableRow key={enrollment.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <div className="p-2 rounded-full bg-primary/10">
+                              <User className="w-4 h-4 text-primary" />
+                            </div>
+                            <span className="font-mono font-medium">{enrollment.user_name}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-mono text-muted-foreground">
+                          {enrollment.course_title}
+                        </TableCell>
+                        <TableCell className="font-mono text-sm text-muted-foreground">
+                          {format(new Date(enrollment.completed_at), "MMM dd, yyyy")}
+                        </TableCell>
+                        <TableCell>
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-mono ${
+                              enrollment.has_certificate
+                                ? "bg-secondary/20 text-secondary"
+                                : "bg-destructive/20 text-destructive"
+                            }`}
+                          >
+                            {enrollment.has_certificate ? "Issued" : "Not Issued"}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {!enrollment.has_certificate && (
+                            <Button
+                              size="sm"
+                              onClick={() => allocateCertificate(enrollment)}
+                              disabled={creatingCert === enrollment.id}
+                              className="bg-primary text-primary-foreground hover:bg-primary/80 font-mono"
+                            >
+                              {creatingCert === enrollment.id ? (
+                                <Loader2 className="w-4 h-4 animate-spin mr-1" />
+                              ) : (
+                                <Plus className="w-4 h-4 mr-1" />
+                              )}
+                              Allocate Certificate
+                            </Button>
+                          )}
+                          {enrollment.has_certificate && (
+                            <span className="text-sm text-muted-foreground font-mono">
+                              Certificate exists
+                            </span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       )}
 
       {/* Certificate Detail Dialog */}
