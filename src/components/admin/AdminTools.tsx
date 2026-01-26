@@ -22,6 +22,7 @@ import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ImageUpload from "./ImageUpload";
+import { toolSchema } from "@/lib/validations/admin";
 
 interface Tool {
   id: string;
@@ -74,14 +75,33 @@ const AdminTools = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const toolData = {
+    // Prepare data for validation
+    const dataToValidate = {
       name: formData.name,
       description: formData.description || null,
-      category: formData.category,
+      category: formData.category as "free" | "paid",
       icon: formData.icon || null,
       url: formData.url || null,
       price: formData.price ? parseFloat(formData.price) : null,
       is_active: formData.is_active,
+    };
+
+    // Validate with Zod
+    const result = toolSchema.safeParse(dataToValidate);
+    if (!result.success) {
+      result.error.errors.forEach(err => toast.error(`${err.path.length > 0 ? err.path.join('.') + ': ' : ''}${err.message}`));
+      return;
+    }
+
+    // Use the original data (already validated) with proper typing
+    const toolData = {
+      name: dataToValidate.name,
+      description: dataToValidate.description,
+      category: dataToValidate.category,
+      icon: dataToValidate.icon,
+      url: dataToValidate.url,
+      price: dataToValidate.price,
+      is_active: dataToValidate.is_active,
     };
 
     try {

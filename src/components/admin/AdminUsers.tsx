@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Shield, User, Crown, Trash2, AlertTriangle } from "lucide-react";
+import { Search, Shield, User, Crown, Trash2, AlertTriangle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -115,26 +115,24 @@ const AdminUsers = () => {
     try {
       setDeletingUserId(userId);
 
-      // Delete user role first
-      await supabase
-        .from("user_roles")
-        .delete()
-        .eq("user_id", userId);
+      // Get current session for auth header
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error("Not authenticated");
+      }
 
-      // Delete user profile
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .delete()
-        .eq("user_id", userId);
+      // Call edge function to properly delete user (including auth.users)
+      const response = await supabase.functions.invoke("delete-user", {
+        body: { userId },
+      });
 
-      if (profileError) throw profileError;
+      if (response.error) {
+        throw new Error(response.error.message || "Failed to delete user");
+      }
 
-      // Delete related data (enrollments, progress, certificates)
-      await Promise.all([
-        supabase.from("course_enrollments").delete().eq("user_id", userId),
-        supabase.from("lesson_progress").delete().eq("user_id", userId),
-        supabase.from("certificates").delete().eq("user_id", userId),
-      ]);
+      if (response.data?.error) {
+        throw new Error(response.data.error);
+      }
 
       toast.success("User deleted successfully");
       fetchUsers();
@@ -252,7 +250,11 @@ const AdminUsers = () => {
                       className="text-destructive hover:text-destructive hover:bg-destructive/10"
                       disabled={user.role === "admin" || deletingUserId === user.user_id}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      {deletingUserId === user.user_id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-4 h-4" />
+                      )}
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent className="bg-card border-border">

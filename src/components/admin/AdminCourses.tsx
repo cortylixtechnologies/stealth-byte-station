@@ -22,6 +22,7 @@ import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ImageUpload from "./ImageUpload";
+import { courseSchema } from "@/lib/validations/admin";
 
 interface Course {
   id: string;
@@ -80,17 +81,39 @@ const AdminCourses = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const courseData = {
+    // Prepare data for validation
+    const dataToValidate = {
       title: formData.title,
       description: formData.description || null,
-      category: formData.category,
-      level: formData.level,
+      category: formData.category as "cyber-security" | "programming" | "graphic-design",
+      level: formData.level as "beginner" | "intermediate" | "advanced",
       duration: formData.duration || null,
       lessons_count: formData.lessons_count ? parseInt(formData.lessons_count) : null,
       image_url: formData.image_url || null,
       price: formData.price ? parseFloat(formData.price) : null,
       is_free: formData.is_free,
       is_active: formData.is_active,
+    };
+
+    // Validate with Zod
+    const result = courseSchema.safeParse(dataToValidate);
+    if (!result.success) {
+      result.error.errors.forEach(err => toast.error(`${err.path.length > 0 ? err.path.join('.') + ': ' : ''}${err.message}`));
+      return;
+    }
+
+    // Use the original data (already validated) with proper typing
+    const courseData = {
+      title: dataToValidate.title,
+      description: dataToValidate.description,
+      category: dataToValidate.category,
+      level: dataToValidate.level,
+      duration: dataToValidate.duration,
+      lessons_count: dataToValidate.lessons_count,
+      image_url: dataToValidate.image_url,
+      price: dataToValidate.price,
+      is_free: dataToValidate.is_free,
+      is_active: dataToValidate.is_active,
     };
 
     try {

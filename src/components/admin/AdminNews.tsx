@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import ImageUpload from "./ImageUpload";
+import { newsSchema } from "@/lib/validations/admin";
 
 interface NewsItem {
   id: string;
@@ -69,7 +70,8 @@ const AdminNews = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const newsData = {
+    // Prepare data for validation
+    const dataToValidate = {
       title: formData.title,
       summary: formData.summary || null,
       content: formData.content || null,
@@ -77,6 +79,24 @@ const AdminNews = () => {
       author: formData.author || null,
       is_featured: formData.is_featured,
       is_active: formData.is_active,
+    };
+
+    // Validate with Zod
+    const result = newsSchema.safeParse(dataToValidate);
+    if (!result.success) {
+      result.error.errors.forEach(err => toast.error(`${err.path.length > 0 ? err.path.join('.') + ': ' : ''}${err.message}`));
+      return;
+    }
+
+    // Use the original data (already validated) with proper typing
+    const newsData = {
+      title: dataToValidate.title,
+      summary: dataToValidate.summary,
+      content: dataToValidate.content,
+      image_url: dataToValidate.image_url,
+      author: dataToValidate.author,
+      is_featured: dataToValidate.is_featured,
+      is_active: dataToValidate.is_active,
     };
 
     try {
