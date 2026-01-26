@@ -15,6 +15,7 @@ import {
   BookOpen,
   Award,
   FileWarning,
+  BarChart3,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -27,8 +28,10 @@ import AdminCourseModules from "@/components/admin/AdminCourseModules";
 import AdminUsers from "@/components/admin/AdminUsers";
 import AdminCertificates from "@/components/admin/AdminCertificates";
 import AdminSecurityLogs from "@/components/admin/AdminSecurityLogs";
+import SecurityDashboard from "@/components/admin/SecurityDashboard";
 
 const menuItems = [
+  { id: "dashboard", label: "Security Dashboard", icon: BarChart3 },
   { id: "tools", label: "Tools", icon: Wrench },
   { id: "videos", label: "Videos", icon: Video },
   { id: "news", label: "News", icon: Newspaper },
@@ -41,7 +44,7 @@ const menuItems = [
 
 const Admin = () => {
   const { user, isAdmin, loading, signOut } = useAuth();
-  const [activeSection, setActiveSection] = useState("tools");
+  const [activeSection, setActiveSection] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   if (loading) {
@@ -58,6 +61,8 @@ const Admin = () => {
 
   const renderContent = () => {
     switch (activeSection) {
+      case "dashboard":
+        return <SecurityDashboard />;
       case "tools":
         return <AdminTools />;
       case "videos":
@@ -75,7 +80,7 @@ const Admin = () => {
       case "security":
         return <AdminSecurityLogs />;
       default:
-        return <AdminTools />;
+        return <SecurityDashboard />;
     }
   };
 

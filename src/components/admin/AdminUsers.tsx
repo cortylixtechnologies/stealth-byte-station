@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Shield, User, Crown } from "lucide-react";
+import { Search, Shield, User, Crown, Trash2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -9,6 +9,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -27,6 +38,7 @@ const AdminUsers = () => {
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchUsers();
@@ -99,6 +111,40 @@ const AdminUsers = () => {
     }
   };
 
+  const deleteUser = async (userId: string) => {
+    try {
+      setDeletingUserId(userId);
+
+      // Delete user role first
+      await supabase
+        .from("user_roles")
+        .delete()
+        .eq("user_id", userId);
+
+      // Delete user profile
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .delete()
+        .eq("user_id", userId);
+
+      if (profileError) throw profileError;
+
+      // Delete related data (enrollments, progress, certificates)
+      await Promise.all([
+        supabase.from("course_enrollments").delete().eq("user_id", userId),
+        supabase.from("lesson_progress").delete().eq("user_id", userId),
+        supabase.from("certificates").delete().eq("user_id", userId),
+      ]);
+
+      toast.success("User deleted successfully");
+      fetchUsers();
+    } catch (error: any) {
+      toast.error("Error deleting user: " + error.message);
+    } finally {
+      setDeletingUserId(null);
+    }
+  };
+
   const filteredUsers = users.filter((user) =>
     (user.username?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
     (user.full_name?.toLowerCase() || "").includes(searchTerm.toLowerCase())
@@ -132,6 +178,9 @@ const AdminUsers = () => {
         <h1 className="text-2xl font-mono font-bold text-foreground">
           Manage Users
         </h1>
+        <span className="text-sm font-mono text-muted-foreground">
+          {users.length} users
+        </span>
       </div>
 
       <div className="relative">
@@ -194,6 +243,44 @@ const AdminUsers = () => {
                     <SelectItem value="admin">Admin</SelectItem>
                   </SelectContent>
                 </Select>
+                
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      disabled={user.role === "admin" || deletingUserId === user.user_id}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="bg-card border-border">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="flex items-center gap-2 font-mono">
+                        <AlertTriangle className="w-5 h-5 text-destructive" />
+                        Delete User
+                      </AlertDialogTitle>
+                      <AlertDialogDescription className="font-mono text-muted-foreground">
+                        Are you sure you want to delete{" "}
+                        <span className="text-foreground font-semibold">
+                          {user.username || user.full_name || "this user"}
+                        </span>
+                        ? This action cannot be undone. All their data including enrollments, 
+                        progress, and certificates will be permanently removed.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel className="font-mono">Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => deleteUser(user.user_id)}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-mono"
+                      >
+                        Delete User
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </div>
           ))}
