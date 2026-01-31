@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Play, Loader2, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -30,6 +30,9 @@ const Videos = () => {
   const [activeVideo, setActiveVideo] = useState<Video | null>(null);
   const [expanded, setExpanded] = useState(false);
 
+  // New state for Read More / Read Less
+  const [showFullDescription, setShowFullDescription] = useState(false);
+
   useEffect(() => {
     fetchVideos();
   }, []);
@@ -54,14 +57,16 @@ const Videos = () => {
     }
   };
 
-  const filteredVideos = videos.filter((video) => {
-    const matchesCategory =
-      selectedCategory === "All" || video.category === selectedCategory;
-    const matchesSearch = video.title
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  const filteredVideos = useMemo(() => {
+    return videos.filter((video) => {
+      const matchesCategory =
+        selectedCategory === "All" || video.category === selectedCategory;
+      const matchesSearch = video.title
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+      return matchesCategory && matchesSearch;
+    });
+  }, [videos, searchQuery, selectedCategory]);
 
   return (
     <div className="min-h-screen bg-background matrix-bg">
@@ -121,7 +126,7 @@ const Videos = () => {
                   whileHover={{ scale: 1.03 }}
                   onClick={() => {
                     setActiveVideo(video);
-                    setExpanded(false);
+                    setShowFullDescription(false); // reset description toggle
                   }}
                   className="cursor-pointer bg-card border border-border rounded-lg overflow-hidden"
                 >
@@ -162,7 +167,7 @@ const Videos = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 overflow-auto"
           >
             <motion.div
               initial={{ scale: 0.9 }}
@@ -191,15 +196,25 @@ const Videos = () => {
                 )}
               </div>
 
-              {/* Description */}
+              {/* Description with Read More / Read Less */}
               {activeVideo.description && (
-                <div className="p-4 space-y-2">
-                  <p className={`text-sm text-muted-foreground ${expanded ? "" : "line-clamp-3"}`}>
-                    {activeVideo.description}
+                <div className="p-4 max-h-[40vh] overflow-y-auto space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    {showFullDescription
+                      ? activeVideo.description
+                      : activeVideo.description.length > 200
+                      ? `${activeVideo.description.slice(0, 200)}...`
+                      : activeVideo.description}
                   </p>
-                  <button onClick={() => setExpanded(!expanded)} className="text-xs text-primary font-mono">
-                    {expanded ? "Read less" : "Read more"}
-                  </button>
+
+                  {activeVideo.description.length > 200 && (
+                    <button
+                      className="text-primary font-mono text-sm mt-1 hover:underline"
+                      onClick={() => setShowFullDescription(!showFullDescription)}
+                    >
+                      {showFullDescription ? "Read Less" : "Read More"}
+                    </button>
+                  )}
                 </div>
               )}
             </motion.div>
