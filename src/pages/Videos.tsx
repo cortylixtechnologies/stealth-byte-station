@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Search, Play, Loader2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Search, Play, Loader2, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
@@ -20,80 +20,15 @@ interface Video {
   category: string;
 }
 
-/* ================= VIDEO CARD (INLINE) ================= */
-interface VideoCardProps {
-  title: string;
-  description?: string | null;
-  thumbnail: string;
-  duration: string;
-  category: string;
-  videoUrl?: string | null;
-  youtubeUrl?: string | null;
-}
-
-const VideoCard = ({
-  title,
-  description,
-  thumbnail,
-  duration,
-  category,
-  videoUrl,
-  youtubeUrl,
-}: VideoCardProps) => {
-  const link = videoUrl || youtubeUrl || "#";
-
-  return (
-    <motion.a
-      href={link}
-      target="_blank"
-      rel="noopener noreferrer"
-      whileHover={{ scale: 1.03 }}
-      className="group block bg-card border border-border rounded-lg overflow-hidden"
-    >
-      {/* Thumbnail */}
-      <div className="relative">
-        <img
-          src={thumbnail}
-          alt={title}
-          className="w-full h-48 object-cover"
-        />
-
-        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
-          <Play className="w-12 h-12 text-white" />
-        </div>
-
-        <span className="absolute bottom-2 right-2 text-xs bg-black/70 text-white px-2 py-1 rounded font-mono">
-          {duration}
-        </span>
-      </div>
-
-      {/* Content */}
-      <div className="p-4 space-y-2">
-        <h3 className="font-mono font-semibold text-sm line-clamp-2">
-          {title}
-        </h3>
-
-        {description && (
-          <p className="text-xs text-muted-foreground line-clamp-2">
-            {description}
-          </p>
-        )}
-
-        <span className="inline-block text-xs font-mono text-primary">
-          {category}
-        </span>
-      </div>
-    </motion.a>
-  );
-};
-/* ======================================================= */
-
 const Videos = () => {
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState<string[]>(["All"]);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
+
+  const [activeVideo, setActiveVideo] = useState<Video | null>(null);
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     fetchVideos();
@@ -145,87 +80,152 @@ const Videos = () => {
             subtitle="Learn from our comprehensive video tutorials covering hacking, programming, and security tools."
           />
 
-          {/* Search + Categories */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-8"
-          >
-            <div className="relative max-w-md mx-auto mb-6">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Search videos..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 font-mono bg-input border-border focus:border-primary"
-              />
-            </div>
+          {/* Search */}
+          <div className="relative max-w-md mx-auto mb-6">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search videos..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 font-mono"
+            />
+          </div>
 
-            <div className="flex flex-wrap gap-2 justify-center">
-              {categories.map((category) => (
-                <Button
-                  key={category}
-                  variant="outline"
-                  onClick={() => setSelectedCategory(category)}
-                  className={`font-mono ${
-                    selectedCategory === category
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "border-border hover:border-primary hover:text-primary"
-                  }`}
-                >
-                  {category}
-                </Button>
-              ))}
-            </div>
-          </motion.div>
+          {/* Categories */}
+          <div className="flex flex-wrap gap-2 justify-center mb-8">
+            {categories.map((category) => (
+              <Button
+                key={category}
+                variant="outline"
+                onClick={() => setSelectedCategory(category)}
+                className={`font-mono ${
+                  selectedCategory === category
+                    ? "bg-primary text-primary-foreground"
+                    : ""
+                }`}
+              >
+                {category}
+              </Button>
+            ))}
+          </div>
 
-          {/* Videos Grid */}
+          {/* Grid */}
           {loading ? (
             <div className="flex justify-center py-16">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredVideos.map((video, index) => (
+              {filteredVideos.map((video) => (
                 <motion.div
                   key={video.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
+                  whileHover={{ scale: 1.03 }}
+                  onClick={() => {
+                    setActiveVideo(video);
+                    setExpanded(false);
+                  }}
+                  className="cursor-pointer bg-card border border-border rounded-lg overflow-hidden"
                 >
-                  <VideoCard
-                    title={video.title}
-                    description={video.description}
-                    thumbnail={
-                      video.thumbnail_url ||
-                      "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800"
-                    }
-                    duration={video.duration || "N/A"}
-                    category={video.category}
-                    videoUrl={video.video_url}
-                    youtubeUrl={video.youtube_url}
-                  />
+                  <div className="relative">
+                    <img
+                      src={
+                        video.thumbnail_url ||
+                        "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800"
+                      }
+                      className="w-full h-48 object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                      <Play className="w-12 h-12 text-white" />
+                    </div>
+                  </div>
+
+                  <div className="p-4">
+                    <h3 className="font-mono text-sm font-semibold line-clamp-2">
+                      {video.title}
+                    </h3>
+                    <span className="text-xs text-primary font-mono">
+                      {video.category}
+                    </span>
+                  </div>
                 </motion.div>
               ))}
             </div>
-          )}
-
-          {!loading && filteredVideos.length === 0 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-16"
-            >
-              <Play className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground font-mono">
-                No videos found matching your criteria.
-              </p>
-            </motion.div>
           )}
         </div>
       </main>
 
       <Footer />
+
+      {/* ================= VIDEO MODAL ================= */}
+      <AnimatePresence>
+        {activeVideo && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.9 }}
+              className="bg-background max-w-3xl w-full rounded-lg overflow-hidden"
+            >
+              {/* Header */}
+              <div className="flex justify-between items-center p-4 border-b">
+                <h2 className="font-mono font-semibold text-sm">
+                  {activeVideo.title}
+                </h2>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setActiveVideo(null)}
+                >
+                  <X />
+                </Button>
+              </div>
+
+              {/* Player */}
+              <div className="aspect-video bg-black">
+                {activeVideo.youtube_url ? (
+                  <iframe
+                    src={activeVideo.youtube_url.replace("watch?v=", "embed/")}
+                    className="w-full h-full"
+                    allowFullScreen
+                  />
+                ) : (
+                  <video
+                    src={activeVideo.video_url || ""}
+                    controls
+                    className="w-full h-full"
+                  />
+                )}
+              </div>
+
+              {/* Description */}
+              {activeVideo.description && (
+                <div className="p-4 space-y-2">
+                  <p
+                    className={`text-sm text-muted-foreground ${
+                      expanded ? "" : "line-clamp-3"
+                    }`}
+                  >
+                    {activeVideo.description}
+                  </p>
+
+                  <button
+                    onClick={() => setExpanded(!expanded)}
+                    className="text-xs text-primary font-mono"
+                  >
+                    {expanded ? "Read less" : "Read more"}
+                  </button>
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {/* =============================================== */}
     </div>
   );
 };
