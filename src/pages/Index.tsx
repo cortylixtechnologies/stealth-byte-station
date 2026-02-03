@@ -17,6 +17,8 @@ import TypewriterText from "@/components/TypewriterText";
 import GlitchText from "@/components/GlitchText";
 import NeonCard from "@/components/NeonCard";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import SEO from "@/components/SEO";
+import { OrganizationSchema, WebsiteSchema } from "@/components/StructuredData";
 
 const features = [
   {
@@ -59,6 +61,13 @@ const stats = [
 const Index = () => {
   return (
     <div className="min-h-screen bg-background matrix-bg">
+      <SEO 
+        title="Cyber Ninja - Cybersecurity Training, Tools & Resources"
+        description="Master cybersecurity with Cyber Ninja. Access professional hacking tools, courses, tutorials, and resources. Learn ethical hacking, penetration testing, and network security from experts."
+        url="https://stealth-byte-station.lovable.app/"
+      />
+      <OrganizationSchema />
+      <WebsiteSchema />
       <Navbar />
       <WhatsAppButton phoneNumber="255762223306" />
 
