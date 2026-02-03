@@ -8,6 +8,8 @@ import SectionHeader from "@/components/SectionHeader";
 import NewsCard from "@/components/NewsCard";
 import NewsDetailDialog from "@/components/NewsDetailDialog";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import SEO from "@/components/SEO";
+import { BreadcrumbSchema } from "@/components/StructuredData";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 
@@ -53,6 +55,18 @@ const News = () => {
 
   return (
     <div className="min-h-screen bg-background matrix-bg">
+      <SEO 
+        title="Cybersecurity News - Latest Threats & Security Updates"
+        description="Stay informed with the latest cybersecurity news, data breaches, vulnerability disclosures, and industry updates. Expert analysis of emerging threats."
+        keywords="cybersecurity news, hacking news, data breach, security vulnerabilities, cyber threats, infosec news"
+        url="https://stealth-byte-station.lovable.app/news"
+      />
+      <BreadcrumbSchema 
+        items={[
+          { name: "Home", url: "https://stealth-byte-station.lovable.app/" },
+          { name: "News", url: "https://stealth-byte-station.lovable.app/news" }
+        ]} 
+      />
       <Navbar />
       <WhatsAppButton phoneNumber="255762223306" />
 

@@ -22,6 +22,8 @@ import Footer from "@/components/Footer";
 import SectionHeader from "@/components/SectionHeader";
 import ToolCard from "@/components/ToolCard";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import SEO from "@/components/SEO";
+import { BreadcrumbSchema } from "@/components/StructuredData";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Tool {
@@ -35,6 +37,17 @@ interface Tool {
 }
 
 const getIconComponent = (iconName: string | null) => {
+  // Check if it's an image URL
+  if (iconName && iconName.startsWith("http")) {
+    return (
+      <img 
+        src={iconName} 
+        alt="Tool icon" 
+        className="w-6 h-6 object-cover rounded"
+      />
+    );
+  }
+  
   const icons: { [key: string]: React.ReactNode } = {
     network: <Network className="w-6 h-6" />,
     key: <Key className="w-6 h-6" />,
@@ -92,6 +105,18 @@ const Tools = () => {
 
   return (
     <div className="min-h-screen bg-background matrix-bg">
+      <SEO 
+        title="Cybersecurity Tools - Free & Paid Hacking Tools"
+        description="Access powerful cybersecurity tools for penetration testing, vulnerability assessment, and network analysis. Free and premium security tools for ethical hackers."
+        keywords="hacking tools, penetration testing tools, vulnerability scanner, network security tools, cybersecurity software, ethical hacking tools"
+        url="https://stealth-byte-station.lovable.app/tools"
+      />
+      <BreadcrumbSchema 
+        items={[
+          { name: "Home", url: "https://stealth-byte-station.lovable.app/" },
+          { name: "Tools", url: "https://stealth-byte-station.lovable.app/tools" }
+        ]} 
+      />
       <Navbar />
       <WhatsAppButton phoneNumber="255762223306" />
 

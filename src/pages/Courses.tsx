@@ -8,6 +8,8 @@ import Footer from "@/components/Footer";
 import SectionHeader from "@/components/SectionHeader";
 import CourseCard from "@/components/CourseCard";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import SEO from "@/components/SEO";
+import { BreadcrumbSchema } from "@/components/StructuredData";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Progress } from "@/components/ui/progress";
@@ -204,6 +206,18 @@ const Courses = () => {
 
   return (
     <div className="min-h-screen bg-background matrix-bg">
+      <SEO 
+        title="Cybersecurity Courses - Learn Ethical Hacking & Programming"
+        description="Master cybersecurity, ethical hacking, programming, and graphic design with expert-led courses. From beginner to advanced levels, learn practical skills for your career."
+        keywords="cybersecurity courses, ethical hacking training, programming courses, security certifications, online courses, penetration testing course"
+        url="https://stealth-byte-station.lovable.app/courses"
+      />
+      <BreadcrumbSchema 
+        items={[
+          { name: "Home", url: "https://stealth-byte-station.lovable.app/" },
+          { name: "Courses", url: "https://stealth-byte-station.lovable.app/courses" }
+        ]} 
+      />
       <Navbar />
       <WhatsAppButton phoneNumber="255762223306" />
 
