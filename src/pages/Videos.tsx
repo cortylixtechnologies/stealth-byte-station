@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Play, Loader2, X } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
+import { Search, Play, Loader2, X, Lock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
@@ -8,6 +9,7 @@ import Footer from "@/components/Footer";
 import SectionHeader from "@/components/SectionHeader";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Video {
   id: string;
@@ -21,6 +23,8 @@ interface Video {
 }
 
 const Videos = () => {
+  const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState<string[]>(["All"]);
@@ -34,8 +38,12 @@ const Videos = () => {
   const [showFullDescription, setShowFullDescription] = useState(false);
 
   useEffect(() => {
-    fetchVideos();
-  }, []);
+    if (!authLoading && user) {
+      fetchVideos();
+    } else if (!authLoading && !user) {
+      setLoading(false);
+    }
+  }, [user, authLoading]);
 
   const fetchVideos = async () => {
     try {
@@ -67,6 +75,41 @@ const Videos = () => {
       return matchesCategory && matchesSearch;
     });
   }, [videos, searchQuery, selectedCategory]);
+
+  // Show login required screen if not authenticated
+  if (!authLoading && !user) {
+    return (
+      <div className="min-h-screen bg-background matrix-bg">
+        <Navbar />
+        <WhatsAppButton phoneNumber="255762223306" />
+        <main className="pt-24 pb-20 px-4">
+          <div className="container mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="max-w-md mx-auto text-center py-16"
+            >
+              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-primary/10 flex items-center justify-center">
+                <Lock className="w-10 h-10 text-primary" />
+              </div>
+              <h2 className="font-mono text-2xl font-bold text-foreground mb-4">
+                Login Required
+              </h2>
+              <p className="text-muted-foreground mb-6">
+                Please login to access our video tutorials and learn cybersecurity skills.
+              </p>
+              <Link to="/auth">
+                <Button className="font-mono bg-primary text-primary-foreground hover:bg-primary/90">
+                  Login to Watch Videos
+                </Button>
+              </Link>
+            </motion.div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background matrix-bg">

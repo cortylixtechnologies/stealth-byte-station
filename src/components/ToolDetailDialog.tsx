@@ -39,7 +39,7 @@ const ToolDetailDialog = ({
       window.open(url, "_blank");
     } else if (!isFree) {
       const message = encodeURIComponent(
-        `Hello! I'm interested in purchasing the "${name}" tool for $${price || 0}. Please provide payment details.`
+        `Hello! I'm interested in purchasing the "${name}" tool for TSH ${(price || 0).toLocaleString()}. Please provide payment details.`
       );
       window.open(`https://wa.me/${whatsappNumber}?text=${message}`, "_blank");
     }
@@ -76,7 +76,7 @@ const ToolDetailDialog = ({
                   </span>
                 ) : (
                   <span className="flex items-center gap-1">
-                    <Lock className="w-3 h-3" /> ${price || 0}
+                    <Lock className="w-3 h-3" /> TSH {(price || 0).toLocaleString()}
                   </span>
                 )}
               </Badge>
@@ -112,7 +112,7 @@ const ToolDetailDialog = ({
               ) : (
                 <>
                   <MessageCircle className="w-4 h-4 mr-2" />
-                  Buy Now - ${price || 0}
+                  Buy Now - TSH {(price || 0).toLocaleString()}
                 </>
               )}
             </Button>
