@@ -38,7 +38,7 @@ const ToolCard = ({
     } else if (!isFree) {
       // Redirect to WhatsApp with tool purchase message
       const message = encodeURIComponent(
-        `Hello! I'm interested in purchasing the "${name}" tool for $${price || 0}. Please provide payment details.`
+        `Hello! I'm interested in purchasing the "${name}" tool for TSH ${(price || 0).toLocaleString()}. Please provide payment details.`
       );
       window.open(`https://wa.me/${whatsappNumber}?text=${message}`, "_blank");
     }
@@ -79,7 +79,7 @@ const ToolCard = ({
               </span>
             ) : (
               <span className="flex items-center gap-1">
-                <Lock className="w-3 h-3" /> ${price || 0}
+                <Lock className="w-3 h-3" /> TSH {(price || 0).toLocaleString()}
               </span>
             )}
           </Badge>

@@ -197,11 +197,13 @@ const AdminTools = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label className="font-mono">Tool Image</Label>
-                <ImageUpload
-                  value={formData.icon}
-                  onChange={(url) => setFormData({ ...formData, icon: url })}
-                  folder="tools"
-                />
+                <div className="w-full aspect-video max-w-md mx-auto border border-dashed border-border rounded-lg overflow-hidden">
+                  <ImageUpload
+                    value={formData.icon}
+                    onChange={(url) => setFormData({ ...formData, icon: url })}
+                    folder="tools"
+                  />
+                </div>
               </div>
               <div className="space-y-2">
                 <Label className="font-mono">Name</Label>
