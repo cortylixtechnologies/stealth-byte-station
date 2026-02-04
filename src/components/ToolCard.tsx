@@ -13,6 +13,7 @@ interface ToolCardProps {
   price?: number | null;
   url?: string | null;
   whatsappNumber?: string;
+  hasImage?: boolean;
 }
 
 const ToolCard = ({ 
@@ -22,7 +23,8 @@ const ToolCard = ({
   icon, 
   price, 
   url,
-  whatsappNumber = "255762223306" 
+  whatsappNumber = "255762223306",
+  hasImage = false
 }: ToolCardProps) => {
   const [expanded, setExpanded] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -57,14 +59,22 @@ const ToolCard = ({
             : "border-accent hover:shadow-neon-magenta"
         }`}
       >
-        <div className="flex items-start justify-between mb-4">
+        {/* Tool Image */}
+        {hasImage ? (
+          <div className="w-full h-32 rounded-lg overflow-hidden mb-4 bg-muted">
+            {icon}
+          </div>
+        ) : (
           <div
-            className={`p-3 rounded-lg ${
+            className={`p-3 rounded-lg mb-4 w-fit ${
               isFree ? "bg-secondary/10 text-secondary" : "bg-accent/10 text-accent"
             }`}
           >
             {icon}
           </div>
+        )}
+
+        <div className="flex items-center justify-between mb-2">
           <Badge
             variant="outline"
             className={`font-mono ${

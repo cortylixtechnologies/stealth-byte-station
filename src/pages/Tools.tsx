@@ -36,14 +36,14 @@ interface Tool {
   url: string | null;
 }
 
-const getIconComponent = (iconName: string | null) => {
+const getIconComponent = (iconName: string | null, isImage: boolean = false) => {
   // Check if it's an image URL
   if (iconName && iconName.startsWith("http")) {
     return (
       <img 
         src={iconName} 
         alt="Tool icon" 
-        className="w-6 h-6 object-cover rounded"
+        className="w-full h-full object-cover"
       />
     );
   }
@@ -199,8 +199,9 @@ const Tools = () => {
                     description={tool.description || ""}
                     category={tool.category as "free" | "paid"}
                     icon={getIconComponent(tool.icon)}
-                    price={tool.price}
+                    price={tool.price ?? 10000}
                     url={tool.url}
+                    hasImage={!!(tool.icon && tool.icon.startsWith("http"))}
                   />
                 </motion.div>
               ))}
