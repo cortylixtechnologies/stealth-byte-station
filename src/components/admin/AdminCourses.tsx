@@ -314,12 +314,13 @@ const AdminCourses = () => {
               </div>
               {!formData.is_free && (
                 <div className="space-y-2">
-                  <Label className="font-mono">Price ($)</Label>
+                  <Label className="font-mono">Price (TSH)</Label>
                   <Input
                     type="number"
-                    step="0.01"
+                    step="1"
                     value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    placeholder="e.g., 50000"
                     className="font-mono bg-input border-border"
                   />
                 </div>
@@ -384,7 +385,7 @@ const AdminCourses = () => {
                     </span>
                   ) : (
                     <span className="px-2 py-0.5 text-xs font-mono rounded bg-accent/20 text-accent">
-                      ${course.price}
+                      TSH {course.price?.toLocaleString()}
                     </span>
                   )}
                   {!course.is_active && (
