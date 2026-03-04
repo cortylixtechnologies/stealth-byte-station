@@ -4,7 +4,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Shield, Terminal, LogOut, User, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/hooks/useLanguage";
 import ThemeToggle from "@/components/ThemeToggle";
+import LanguageToggle from "@/components/LanguageToggle";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,21 +15,22 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const navLinks = [
-  { name: "Home", path: "/" },
-  { name: "Tools", path: "/tools" },
-  { name: "Videos", path: "/videos" },
-  { name: "News", path: "/news" },
-  { name: "Courses", path: "/courses" },
-  { name: "About", path: "/about" },
-  { name: "Contact", path: "/contact" },
-];
-
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isAdmin, signOut, loading } = useAuth();
+  const { t } = useLanguage();
+
+  const navLinks = [
+    { name: t("nav.home"), path: "/" },
+    { name: t("nav.tools"), path: "/tools" },
+    { name: t("nav.videos"), path: "/videos" },
+    { name: t("nav.news"), path: "/news" },
+    { name: t("nav.courses"), path: "/courses" },
+    { name: t("nav.about"), path: "/about" },
+    { name: t("nav.contact"), path: "/contact" },
+  ];
 
   const handleSignOut = async () => {
     await signOut();
@@ -67,8 +70,9 @@ const Navbar = () => {
             ))}
           </div>
 
-          {/* Theme Toggle & Auth Button */}
-          <div className="hidden md:flex items-center gap-3">
+          {/* Theme Toggle, Language Toggle & Auth Button */}
+          <div className="hidden md:flex items-center gap-2">
+            <LanguageToggle />
             <ThemeToggle />
             {loading ? (
               <div className="w-24 h-9 bg-muted animate-pulse rounded-md" />
@@ -80,14 +84,14 @@ const Navbar = () => {
                     className="font-mono border-primary text-primary hover:bg-primary hover:text-primary-foreground neon-border transition-all duration-300"
                   >
                     <User className="w-4 h-4 mr-2" />
-                    {isAdmin ? "Admin" : "Account"}
+                    {isAdmin ? t("nav.admin") : t("nav.account")}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48 bg-card border-border">
                   <DropdownMenuItem asChild>
                     <Link to="/dashboard" className="font-mono cursor-pointer">
                       <LayoutDashboard className="w-4 h-4 mr-2 text-primary" />
-                      My Dashboard
+                      {t("nav.dashboard")}
                     </Link>
                   </DropdownMenuItem>
                   {isAdmin && (
@@ -96,7 +100,7 @@ const Navbar = () => {
                       <DropdownMenuItem asChild>
                         <Link to="/admin" className="font-mono cursor-pointer">
                           <Shield className="w-4 h-4 mr-2 text-accent" />
-                          Admin Panel
+                          {t("nav.adminPanel")}
                         </Link>
                       </DropdownMenuItem>
                     </>
@@ -107,7 +111,7 @@ const Navbar = () => {
                     className="font-mono text-destructive focus:text-destructive cursor-pointer"
                   >
                     <LogOut className="w-4 h-4 mr-2" />
-                    Logout
+                    {t("nav.logout")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -117,7 +121,7 @@ const Navbar = () => {
                   variant="outline"
                   className="font-mono border-primary text-primary hover:bg-primary hover:text-primary-foreground neon-border transition-all duration-300"
                 >
-                  [ LOGIN ]
+                  [ {t("nav.login")} ]
                 </Button>
               </Link>
             )}
@@ -158,6 +162,10 @@ const Navbar = () => {
                   {">"} {link.name}
                 </Link>
               ))}
+              <div className="flex gap-2 mt-2">
+                <LanguageToggle />
+                <ThemeToggle />
+              </div>
               {user ? (
                 <>
                   <Link to="/dashboard" onClick={() => setIsOpen(false)}>
@@ -165,7 +173,7 @@ const Navbar = () => {
                       variant="outline"
                       className="w-full mt-2 font-mono border-primary text-primary hover:bg-primary hover:text-primary-foreground"
                     >
-                      [ MY DASHBOARD ]
+                      [ {t("nav.dashboard").toUpperCase()} ]
                     </Button>
                   </Link>
                   {isAdmin && (
@@ -174,7 +182,7 @@ const Navbar = () => {
                         variant="outline"
                         className="w-full mt-2 font-mono border-accent text-accent hover:bg-accent hover:text-accent-foreground"
                       >
-                        [ ADMIN PANEL ]
+                        [ {t("nav.adminPanel").toUpperCase()} ]
                       </Button>
                     </Link>
                   )}
@@ -186,7 +194,7 @@ const Navbar = () => {
                     }}
                     className="w-full mt-2 font-mono border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
                   >
-                    [ LOGOUT ]
+                    [ {t("nav.logout").toUpperCase()} ]
                   </Button>
                 </>
               ) : (
@@ -195,7 +203,7 @@ const Navbar = () => {
                     variant="outline"
                     className="w-full mt-2 font-mono border-primary text-primary hover:bg-primary hover:text-primary-foreground"
                   >
-                    [ LOGIN ]
+                    [ {t("nav.login")} ]
                   </Button>
                 </Link>
               )}

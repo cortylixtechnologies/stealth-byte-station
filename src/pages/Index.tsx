@@ -19,51 +19,50 @@ import NeonCard from "@/components/NeonCard";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import SEO from "@/components/SEO";
 import { OrganizationSchema, WebsiteSchema } from "@/components/StructuredData";
-
-const features = [
-  {
-    icon: <Shield className="w-8 h-8" />,
-    title: "Security Tools",
-    description:
-      "Access powerful cybersecurity tools for penetration testing and vulnerability assessment.",
-    variant: "cyan" as const,
-  },
-  {
-    icon: <Terminal className="w-8 h-8" />,
-    title: "Expert Tutorials",
-    description:
-      "Learn from comprehensive video tutorials covering hacking, programming, and security.",
-    variant: "green" as const,
-  },
-  {
-    icon: <Code className="w-8 h-8" />,
-    title: "Courses",
-    description:
-      "Master cybersecurity, programming, and graphic design with structured courses.",
-    variant: "magenta" as const,
-  },
-  {
-    icon: <Cpu className="w-8 h-8" />,
-    title: "Latest News",
-    description:
-      "Stay updated with the latest cybersecurity news, threats, and industry updates.",
-    variant: "cyan" as const,
-  },
-];
-
-const stats = [
-  { value: "10K+", label: "Active Users" },
-  { value: "500+", label: "Tools Available" },
-  { value: "1000+", label: "Video Tutorials" },
-  { value: "50+", label: "Expert Courses" },
-];
+import { useLanguage } from "@/hooks/useLanguage";
 
 const Index = () => {
+  const { t } = useLanguage();
+
+  const features = [
+    {
+      icon: <Shield className="w-8 h-8" />,
+      title: t("features.securityTools"),
+      description: t("features.securityToolsDesc"),
+      variant: "cyan" as const,
+    },
+    {
+      icon: <Terminal className="w-8 h-8" />,
+      title: t("features.expertTutorials"),
+      description: t("features.expertTutorialsDesc"),
+      variant: "green" as const,
+    },
+    {
+      icon: <Code className="w-8 h-8" />,
+      title: t("features.courses"),
+      description: t("features.coursesDesc"),
+      variant: "magenta" as const,
+    },
+    {
+      icon: <Cpu className="w-8 h-8" />,
+      title: t("features.latestNews"),
+      description: t("features.latestNewsDesc"),
+      variant: "cyan" as const,
+    },
+  ];
+
+  const stats = [
+    { value: "10K+", label: t("stats.activeUsers") },
+    { value: "500+", label: t("stats.toolsAvailable") },
+    { value: "1000+", label: t("stats.videoTutorials") },
+    { value: "50+", label: t("stats.expertCourses") },
+  ];
+
   return (
     <div className="min-h-screen bg-background matrix-bg">
       <SEO 
         title="Cyber Ninja - Cybersecurity Training, Tools & Resources"
-        description="Master cybersecurity with Cyber Ninja. Access professional hacking tools, courses, tutorials, and resources. Learn ethical hacking, penetration testing, and network security from experts."
+        description="Master cybersecurity with Cyber Ninja. Access professional hacking tools, courses, tutorials, and resources."
         url="https://stealth-byte-station.lovable.app/"
       />
       <OrganizationSchema />
@@ -73,7 +72,6 @@ const Index = () => {
 
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 px-4 overflow-hidden scanline">
-        {/* Animated background elements */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse" />
           <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-pulse delay-1000" />
@@ -89,7 +87,7 @@ const Index = () => {
             <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/30 rounded-full px-4 py-2 mb-6">
               <Zap className="w-4 h-4 text-primary" />
               <span className="font-mono text-sm text-primary">
-                Welcome to the cyber realm
+                {t("hero.welcome")}
               </span>
             </div>
 
@@ -100,16 +98,14 @@ const Index = () => {
 
             <div className="font-mono text-xl md:text-2xl text-muted-foreground mb-8 h-16">
               <TypewriterText
-                text="> Unlock the secrets of cybersecurity_"
+                text={t("hero.typewriter")}
                 speed={40}
                 delay={500}
               />
             </div>
 
             <p className="text-muted-foreground text-lg mb-8 max-w-2xl mx-auto">
-              Your ultimate platform for cybersecurity tools, expert tutorials,
-              and cutting-edge courses. Join thousands of security enthusiasts
-              and professionals.
+              {t("hero.subtitle")}
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -119,7 +115,7 @@ const Index = () => {
                   className="font-mono bg-primary text-primary-foreground hover:bg-primary/90 shadow-neon-cyan"
                 >
                   <Terminal className="w-5 h-5 mr-2" />
-                  Explore Tools
+                  {t("hero.exploreTools")}
                 </Button>
               </Link>
               <Link to="/courses">
@@ -129,7 +125,7 @@ const Index = () => {
                   className="font-mono border-primary text-primary hover:bg-primary/10"
                 >
                   <Play className="w-5 h-5 mr-2" />
-                  Start Learning
+                  {t("hero.startLearning")}
                 </Button>
               </Link>
             </div>
@@ -152,21 +148,12 @@ const Index = () => {
                 </span>
               </div>
               <div className="p-6 font-mono text-sm space-y-2">
-                <p className="text-secondary">
-                  $ ./initialize_cyberninja.sh
-                </p>
+                <p className="text-secondary">$ ./initialize_cyberninja.sh</p>
+                <p className="text-muted-foreground">[+] Loading security modules...</p>
+                <p className="text-muted-foreground">[+] Establishing encrypted connection...</p>
+                <p className="text-primary">[✓] Connection established. Welcome, Ninja.</p>
                 <p className="text-muted-foreground">
-                  [+] Loading security modules...
-                </p>
-                <p className="text-muted-foreground">
-                  [+] Establishing encrypted connection...
-                </p>
-                <p className="text-primary">
-                  [✓] Connection established. Welcome, Ninja.
-                </p>
-                <p className="text-muted-foreground">
-                  [+] Ready to explore {">"}
-                  <span className="terminal-cursor">_</span>
+                  [+] Ready to explore {">"}<span className="terminal-cursor">_</span>
                 </p>
               </div>
             </div>
@@ -209,10 +196,10 @@ const Index = () => {
             className="text-center mb-12"
           >
             <span className="font-mono text-sm text-primary mb-2 block">
-              {"// What we offer"}
+              {"// "}{t("features.tag")}
             </span>
             <h2 className="font-mono text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Your Cyber Arsenal
+              {t("features.title")}
             </h2>
             <div className="flex items-center justify-center gap-2">
               <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
@@ -258,11 +245,10 @@ const Index = () => {
           >
             <Lock className="w-16 h-16 text-primary mx-auto mb-6" />
             <h2 className="font-mono text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Ready to Begin Your Journey?
+              {t("cta.title")}
             </h2>
             <p className="text-muted-foreground mb-8">
-              Join our community of cybersecurity professionals and enthusiasts.
-              Start learning, exploring tools, and stay ahead of threats.
+              {t("cta.subtitle")}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/auth">
@@ -270,7 +256,7 @@ const Index = () => {
                   size="lg"
                   className="font-mono bg-primary text-primary-foreground hover:bg-primary/90 shadow-neon-cyan"
                 >
-                  Get Started Free
+                  {t("cta.getStarted")}
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
               </Link>
@@ -280,7 +266,7 @@ const Index = () => {
                   variant="outline"
                   className="font-mono border-primary text-primary hover:bg-primary/10"
                 >
-                  Learn More
+                  {t("cta.learnMore")}
                 </Button>
               </Link>
             </div>

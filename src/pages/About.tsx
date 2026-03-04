@@ -13,6 +13,7 @@ import Footer from "@/components/Footer";
 import SectionHeader from "@/components/SectionHeader";
 import NeonCard from "@/components/NeonCard";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import { useLanguage } from "@/hooks/useLanguage";
 
 const certifications = [
   {
@@ -41,22 +42,9 @@ const certifications = [
   },
 ];
 
-const skills = [
-  "Penetration Testing",
-  "Vulnerability Assessment",
-  "Network Security",
-  "Web Application Security",
-  "Malware Analysis",
-  "Incident Response",
-  "Cryptography",
-  "Cloud Security",
-  "OSINT",
-  "Reverse Engineering",
-  "Red Team Operations",
-  "Security Automation",
-];
-
 const About = () => {
+  const { t } = useLanguage();
+
   return (
     <div className="min-h-screen bg-background matrix-bg">
       <Navbar />
@@ -65,9 +53,9 @@ const About = () => {
       <main className="pt-24 pb-20 px-4">
         <div className="container mx-auto">
           <SectionHeader
-            tag="Who Am I"
-            title="About CyberNinja"
-            subtitle="Dedicated to empowering individuals with cybersecurity knowledge and skills."
+            tag={t("about.tag")}
+            title={t("about.title")}
+            subtitle={t("about.subtitle")}
           />
 
           {/* Profile Section */}
@@ -94,14 +82,10 @@ const About = () => {
                     CyberNinja
                   </h2>
                   <p className="text-primary font-mono mb-4">
-                    Security Researcher & Ethical Hacker
+                    {t("about.role")}
                   </p>
                   <p className="text-muted-foreground leading-relaxed">
-                    I am the Cyber Ninja, a multi-disciplinary tech professional
-                    specializing in Cyber Security, Programming, and Graphic
-                    Design. I build secure, resilient systems while crafting
-                    visually striking, user-focused digital experiences—ensuring
-                    your digital presence is both protected and powerful.
+                    {t("about.bio")}
                   </p>
                 </div>
               </div>
@@ -117,10 +101,10 @@ const About = () => {
               className="text-center mb-8"
             >
               <span className="font-mono text-sm text-primary mb-2 block">
-                {"// Credentials"}
+                {"// "}{t("about.credentials")}
               </span>
               <h3 className="font-mono text-2xl font-bold text-foreground">
-                Professional Certifications
+                {t("about.certifications")}
               </h3>
             </motion.div>
 
@@ -136,9 +120,7 @@ const About = () => {
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.1 }}
                 >
-                  <NeonCard
-                    variant={index % 2 === 0 ? "cyan" : "magenta"}
-                  >
+                  <NeonCard variant={index % 2 === 0 ? "cyan" : "magenta"}>
                     <div className="flex items-start gap-4">
                       <div className="p-3 rounded-lg bg-primary/10 text-primary">
                         {cert.icon}
@@ -168,15 +150,10 @@ const About = () => {
             <div className="cyber-card border border-accent p-8 rounded-lg shadow-neon-magenta text-center">
               <Users className="w-12 h-12 text-accent mx-auto mb-4" />
               <h3 className="font-mono text-xl font-bold text-foreground mb-4">
-                Our Mission
+                {t("about.mission")}
               </h3>
               <p className="text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-                Our mission is to deliver elite offensive security solutions with
-                precision and stealth. We specialize in infiltrating complex
-                infrastructures to uncover hidden risks, ensuring our clients
-                stay ten steps ahead of cyber criminals. We don’t just find bugs
-                — we neutralize threats through the lens of a professional
-                hacker.
+                {t("about.missionText")}
               </p>
             </div>
           </motion.div>

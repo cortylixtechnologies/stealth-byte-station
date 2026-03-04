@@ -12,6 +12,7 @@ import SEO from "@/components/SEO";
 import { BreadcrumbSchema } from "@/components/StructuredData";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface NewsArticle {
   id: string;
@@ -28,19 +29,13 @@ const News = () => {
   const [news, setNews] = useState<NewsArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [featuredDialogOpen, setFeaturedDialogOpen] = useState(false);
+  const { t } = useLanguage();
 
-  useEffect(() => {
-    fetchNews();
-  }, []);
+  useEffect(() => { fetchNews(); }, []);
 
   const fetchNews = async () => {
     try {
-      const { data, error } = await supabase
-        .from("news")
-        .select("*")
-        .eq("is_active", true)
-        .order("published_at", { ascending: false });
-
+      const { data, error } = await supabase.from("news").select("*").eq("is_active", true).order("published_at", { ascending: false });
       if (error) throw error;
       setNews(data || []);
     } catch (error) {
@@ -55,120 +50,55 @@ const News = () => {
 
   return (
     <div className="min-h-screen bg-background matrix-bg">
-      <SEO 
-        title="Cybersecurity News - Latest Threats & Security Updates"
-        description="Stay informed with the latest cybersecurity news, data breaches, vulnerability disclosures, and industry updates. Expert analysis of emerging threats."
-        keywords="cybersecurity news, hacking news, data breach, security vulnerabilities, cyber threats, infosec news"
-        url="https://stealth-byte-station.lovable.app/news"
-      />
-      <BreadcrumbSchema 
-        items={[
-          { name: "Home", url: "https://stealth-byte-station.lovable.app/" },
-          { name: "News", url: "https://stealth-byte-station.lovable.app/news" }
-        ]} 
-      />
+      <SEO title="Cybersecurity News - Latest Threats & Security Updates" description="Stay informed with the latest cybersecurity news, data breaches, vulnerability disclosures, and industry updates." url="https://stealth-byte-station.lovable.app/news" />
+      <BreadcrumbSchema items={[{ name: "Home", url: "https://stealth-byte-station.lovable.app/" }, { name: "News", url: "https://stealth-byte-station.lovable.app/news" }]} />
       <Navbar />
       <WhatsAppButton phoneNumber="255762223306" />
 
       <main className="pt-24 pb-20 px-4">
         <div className="container mx-auto">
-          <SectionHeader
-            tag="Cyber Intel"
-            title="Latest Cyber News"
-            subtitle="Stay informed with the latest cybersecurity news, threats, vulnerabilities, and industry updates."
-          />
+          <SectionHeader tag={t("news.tag")} title={t("news.title")} subtitle={t("news.subtitle")} />
 
           {loading ? (
-            <div className="flex justify-center py-16">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
-            </div>
+            <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
           ) : news.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-16"
-            >
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16">
               <Newspaper className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground font-mono">
-                No news articles available yet.
-              </p>
+              <p className="text-muted-foreground font-mono">{t("news.noArticles")}</p>
             </motion.div>
           ) : (
             <>
-              {/* Featured Article */}
               {featuredArticle && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mb-12"
-                >
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-12">
                   <div className="cyber-card border border-primary overflow-hidden shadow-neon-cyan">
                     <div className="grid md:grid-cols-2">
                       <div className="relative h-64 md:h-auto">
-                        <img
-                          src={featuredArticle.image_url || "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800"}
-                          alt={featuredArticle.title}
-                          className="absolute inset-0 w-full h-full object-cover"
-                        />
+                        <img src={featuredArticle.image_url || "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800"} alt={featuredArticle.title} className="absolute inset-0 w-full h-full object-cover" />
                         <div className="absolute inset-0 bg-gradient-to-r from-background to-transparent md:bg-gradient-to-r md:from-transparent md:to-background" />
                       </div>
                       <div className="p-8 flex flex-col justify-center">
                         <span className="inline-flex items-center gap-2 text-primary font-mono text-sm mb-4">
                           <Newspaper className="w-4 h-4" />
-                          FEATURED
+                          {t("news.featured")}
                         </span>
-                        <h3 className="font-mono text-2xl font-bold text-foreground mb-4">
-                          {featuredArticle.title}
-                        </h3>
-                        <p className="text-muted-foreground mb-4 line-clamp-3">
-                          {featuredArticle.summary}
-                        </p>
+                        <h3 className="font-mono text-2xl font-bold text-foreground mb-4">{featuredArticle.title}</h3>
+                        <p className="text-muted-foreground mb-4 line-clamp-3">{featuredArticle.summary}</p>
                         <div className="flex items-center justify-between">
-                          <p className="text-sm text-muted-foreground font-mono">
-                            {format(new Date(featuredArticle.published_at), "MMMM d, yyyy")}
-                          </p>
-                          <Button
-                            onClick={() => setFeaturedDialogOpen(true)}
-                            variant="ghost"
-                            className="font-mono text-primary hover:text-primary hover:bg-primary/10"
-                          >
-                            Read More <ArrowRight className="w-4 h-4 ml-2" />
+                          <p className="text-sm text-muted-foreground font-mono">{format(new Date(featuredArticle.published_at), "MMMM d, yyyy")}</p>
+                          <Button onClick={() => setFeaturedDialogOpen(true)} variant="ghost" className="font-mono text-primary hover:text-primary hover:bg-primary/10">
+                            {t("news.readMore")} <ArrowRight className="w-4 h-4 ml-2" />
                           </Button>
                         </div>
                       </div>
                     </div>
                   </div>
-
-                  <NewsDetailDialog
-                    open={featuredDialogOpen}
-                    onOpenChange={setFeaturedDialogOpen}
-                    title={featuredArticle.title}
-                    summary={featuredArticle.summary || ""}
-                    content={featuredArticle.content || ""}
-                    date={format(new Date(featuredArticle.published_at), "MMMM d, yyyy")}
-                    author={featuredArticle.author}
-                    image={featuredArticle.image_url}
-                  />
+                  <NewsDetailDialog open={featuredDialogOpen} onOpenChange={setFeaturedDialogOpen} title={featuredArticle.title} summary={featuredArticle.summary || ""} content={featuredArticle.content || ""} date={format(new Date(featuredArticle.published_at), "MMMM d, yyyy")} author={featuredArticle.author} image={featuredArticle.image_url} />
                 </motion.div>
               )}
-
-              {/* News Grid */}
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {otherArticles.map((article, index) => (
-                  <motion.div
-                    key={article.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                  >
-                    <NewsCard
-                      title={article.title}
-                      summary={article.summary || ""}
-                      content={article.content || ""}
-                      date={format(new Date(article.published_at), "MMMM d, yyyy")}
-                      author={article.author}
-                      image={article.image_url || "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800"}
-                    />
+                  <motion.div key={article.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }}>
+                    <NewsCard title={article.title} summary={article.summary || ""} content={article.content || ""} date={format(new Date(article.published_at), "MMMM d, yyyy")} author={article.author} image={article.image_url || "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800"} />
                   </motion.div>
                 ))}
               </div>
