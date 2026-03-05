@@ -1,0 +1,1 @@
+ALTER TABLE public.tools ADD COLUMN description_sw TEXT;

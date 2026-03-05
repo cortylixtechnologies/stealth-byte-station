@@ -28,6 +28,7 @@ interface Tool {
   id: string;
   name: string;
   description: string | null;
+  description_sw: string | null;
   category: string;
   icon: string | null;
   url: string | null;
@@ -45,6 +46,7 @@ const AdminTools = () => {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
+    description_sw: "",
     category: "free",
     icon: "",
     url: "",
@@ -79,6 +81,7 @@ const AdminTools = () => {
     const dataToValidate = {
       name: formData.name,
       description: formData.description || null,
+      description_sw: formData.description_sw || null,
       category: formData.category as "free" | "paid",
       icon: formData.icon || null,
       url: formData.url || null,
@@ -97,6 +100,7 @@ const AdminTools = () => {
     const toolData = {
       name: dataToValidate.name,
       description: dataToValidate.description,
+      description_sw: dataToValidate.description_sw,
       category: dataToValidate.category,
       icon: dataToValidate.icon,
       url: dataToValidate.url,
@@ -146,6 +150,7 @@ const AdminTools = () => {
     setFormData({
       name: tool.name,
       description: tool.description || "",
+      description_sw: tool.description_sw || "",
       category: tool.category,
       icon: tool.icon || "",
       url: tool.url || "",
@@ -160,6 +165,7 @@ const AdminTools = () => {
     setFormData({
       name: "",
       description: "",
+      description_sw: "",
       category: "free",
       icon: "",
       url: "",
@@ -215,10 +221,19 @@ const AdminTools = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label className="font-mono">Description</Label>
+                <Label className="font-mono">Description (English)</Label>
                 <Textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="font-mono bg-input border-border"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="font-mono">Description (Swahili)</Label>
+                <Textarea
+                  value={formData.description_sw}
+                  onChange={(e) => setFormData({ ...formData, description_sw: e.target.value })}
+                  placeholder="Maelezo kwa Kiswahili..."
                   className="font-mono bg-input border-border"
                 />
               </div>
