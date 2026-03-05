@@ -19,6 +19,7 @@ interface Tool {
   id: string;
   name: string;
   description: string | null;
+  description_sw: string | null;
   category: string;
   icon: string | null;
   price: number | null;
@@ -45,7 +46,7 @@ const Tools = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "free" | "paid">("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   useEffect(() => { fetchTools(); }, []);
 
@@ -96,7 +97,7 @@ const Tools = () => {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredTools.map((tool, index) => (
                 <motion.div key={tool.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }}>
-                  <ToolCard name={tool.name} description={tool.description || ""} category={tool.category as "free" | "paid"} icon={getIconComponent(tool.icon)} price={tool.price ?? 10000} url={tool.url} hasImage={!!(tool.icon && tool.icon.startsWith("http"))} />
+                  <ToolCard name={tool.name} description={(language === "sw" && tool.description_sw) ? tool.description_sw : (tool.description || "")} category={tool.category as "free" | "paid"} icon={getIconComponent(tool.icon)} price={tool.price ?? 10000} url={tool.url} hasImage={!!(tool.icon && tool.icon.startsWith("http"))} />
                 </motion.div>
               ))}
             </div>

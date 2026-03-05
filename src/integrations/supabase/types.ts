@@ -410,6 +410,7 @@ export type Database = {
           category: string
           created_at: string
           description: string | null
+          description_sw: string | null
           icon: string | null
           id: string
           is_active: boolean
@@ -422,6 +423,7 @@ export type Database = {
           category?: string
           created_at?: string
           description?: string | null
+          description_sw?: string | null
           icon?: string | null
           id?: string
           is_active?: boolean
@@ -434,6 +436,7 @@ export type Database = {
           category?: string
           created_at?: string
           description?: string | null
+          description_sw?: string | null
           icon?: string | null
           id?: string
           is_active?: boolean
