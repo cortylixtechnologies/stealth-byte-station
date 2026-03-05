@@ -1,5 +1,4 @@
-import { motion, AnimatePresence } from "framer-motion";
-import { X, ExternalLink, Lock, Unlock, MessageCircle, Info } from "lucide-react";
+import { ExternalLink, Lock, Unlock, MessageCircle, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -8,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface ToolDetailDialogProps {
   open: boolean;
@@ -32,6 +32,7 @@ const ToolDetailDialog = ({
   url,
   whatsappNumber = "255762223306",
 }: ToolDetailDialogProps) => {
+  const { t } = useLanguage();
   const isFree = category === "free";
 
   const handleAction = () => {
@@ -39,7 +40,7 @@ const ToolDetailDialog = ({
       window.open(url, "_blank");
     } else if (!isFree) {
       const message = encodeURIComponent(
-        `Hello! I'm interested in purchasing the "${name}" tool for TSH ${(price || 0).toLocaleString()}. Please provide payment details.`
+        `${t("tools.whatsappMessage")} "${name}" tool for TSH ${(price || 0).toLocaleString()}. ${t("tools.whatsappPayment")}`
       );
       window.open(`https://wa.me/${whatsappNumber}?text=${message}`, "_blank");
     }
@@ -72,7 +73,7 @@ const ToolDetailDialog = ({
               >
                 {isFree ? (
                   <span className="flex items-center gap-1">
-                    <Unlock className="w-3 h-3" /> FREE
+                    <Unlock className="w-3 h-3" /> {t("tools.freeLabel")}
                   </span>
                 ) : (
                   <span className="flex items-center gap-1">
@@ -88,10 +89,10 @@ const ToolDetailDialog = ({
           <div>
             <h4 className="font-mono text-sm text-primary mb-2 flex items-center gap-2">
               <Info className="w-4 h-4" />
-              About This Tool
+              {t("tools.aboutTool")}
             </h4>
             <p className="text-muted-foreground text-sm leading-relaxed">
-              {description || "No description available for this tool."}
+              {description || t("tools.noDescription")}
             </p>
           </div>
 
@@ -107,12 +108,12 @@ const ToolDetailDialog = ({
               {isFree ? (
                 <>
                   <ExternalLink className="w-4 h-4 mr-2" />
-                  Launch Tool
+                  {t("tools.launchTool")}
                 </>
               ) : (
                 <>
                   <MessageCircle className="w-4 h-4 mr-2" />
-                  Buy Now - TSH {(price || 0).toLocaleString()}
+                  {t("tools.buyNow")} - TSH {(price || 0).toLocaleString()}
                 </>
               )}
             </Button>

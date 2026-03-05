@@ -112,6 +112,18 @@ export const translations: Translations = {
   "tools.free": { en: "Free", sw: "Bure" },
   "tools.paid": { en: "Paid", sw: "Ya Kulipia" },
   "tools.noResults": { en: "No tools found matching your criteria.", sw: "Hakuna zana zilizopatikana kulingana na vigezo vyako." },
+  "tools.showLess": { en: "Show Less", sw: "Onyesha Kidogo" },
+  "tools.readMore": { en: "Read More", sw: "Soma Zaidi" },
+  "tools.about": { en: "About", sw: "Kuhusu" },
+  "tools.useTool": { en: "Use Tool", sw: "Tumia Zana" },
+  "tools.buy": { en: "BUY", sw: "NUNUA" },
+  "tools.aboutTool": { en: "About This Tool", sw: "Kuhusu Zana Hii" },
+  "tools.launchTool": { en: "Launch Tool", sw: "Fungua Zana" },
+  "tools.buyNow": { en: "Buy Now", sw: "Nunua Sasa" },
+  "tools.noDescription": { en: "No description available for this tool.", sw: "Hakuna maelezo ya zana hii." },
+  "tools.freeLabel": { en: "FREE", sw: "BURE" },
+  "tools.whatsappMessage": { en: "Hello! I'm interested in purchasing the", sw: "Habari! Napenda kununua" },
+  "tools.whatsappPayment": { en: "Please provide payment details.", sw: "Tafadhali toa maelezo ya malipo." },
 
   // Videos Page
   "videos.tag": { en: "Video Library", sw: "Maktaba ya Video" },
