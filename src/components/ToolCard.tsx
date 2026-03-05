@@ -4,6 +4,7 @@ import { ExternalLink, Lock, Unlock, MessageCircle, ChevronDown, ChevronUp, Info
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import ToolDetailDialog from "./ToolDetailDialog";
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface ToolCardProps {
   name: string;
@@ -28,6 +29,7 @@ const ToolCard = ({
 }: ToolCardProps) => {
   const [expanded, setExpanded] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
+  const { t } = useLanguage();
   const isFree = category === "free";
   const shouldTruncate = description.length > 80;
   const displayDescription = expanded || !shouldTruncate 
@@ -38,9 +40,8 @@ const ToolCard = ({
     if (isFree && url) {
       window.open(url, "_blank");
     } else if (!isFree) {
-      // Redirect to WhatsApp with tool purchase message
       const message = encodeURIComponent(
-        `Hello! I'm interested in purchasing the "${name}" tool for TSH ${(price || 0).toLocaleString()}. Please provide payment details.`
+        `${t("tools.whatsappMessage")} "${name}" tool for TSH ${(price || 0).toLocaleString()}. ${t("tools.whatsappPayment")}`
       );
       window.open(`https://wa.me/${whatsappNumber}?text=${message}`, "_blank");
     }
@@ -59,7 +60,6 @@ const ToolCard = ({
             : "border-accent hover:shadow-neon-magenta"
         }`}
       >
-        {/* Tool Image */}
         {hasImage ? (
           <div className="w-full h-32 rounded-lg overflow-hidden mb-4 bg-muted">
             {icon}
@@ -85,7 +85,7 @@ const ToolCard = ({
           >
             {isFree ? (
               <span className="flex items-center gap-1">
-                <Unlock className="w-3 h-3" /> FREE
+                <Unlock className="w-3 h-3" /> {t("tools.freeLabel")}
               </span>
             ) : (
               <span className="flex items-center gap-1">
@@ -124,12 +124,12 @@ const ToolCard = ({
               {expanded ? (
                 <>
                   <ChevronUp className="w-3 h-3" />
-                  Show Less
+                  {t("tools.showLess")}
                 </>
               ) : (
                 <>
                   <ChevronDown className="w-3 h-3" />
-                  Read More
+                  {t("tools.readMore")}
                 </>
               )}
             </button>
@@ -148,7 +148,7 @@ const ToolCard = ({
             }`}
           >
             <Info className="w-3 h-3 mr-1" />
-            About
+            {t("tools.about")}
           </Button>
           <Button
             onClick={handleClick}
@@ -163,12 +163,12 @@ const ToolCard = ({
             {isFree ? (
               <>
                 <ExternalLink className="w-3 h-3 mr-1" />
-                Use Tool
+                {t("tools.useTool")}
               </>
             ) : (
               <>
                 <MessageCircle className="w-3 h-3 mr-1" />
-                BUY
+                {t("tools.buy")}
               </>
             )}
           </Button>
