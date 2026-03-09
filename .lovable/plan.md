@@ -1,35 +1,19 @@
 
 
-## Language Toggle: English / Swahili
+## Fix: Vercel SPA Routing Issue
 
-### Approach
+The problem is that Vercel doesn't know how to handle client-side routes. When you refresh on a route like `/tools`, Vercel looks for a file at that path, finds nothing, and returns "Not Found." The fix is a `vercel.json` config that rewrites all requests to `index.html`.
 
-Create a lightweight i18n (internationalization) system using React Context, similar to the existing `ThemeProvider` pattern. A `LanguageProvider` will wrap the app and expose a `useLanguage` hook. A toggle button will sit in the Navbar next to the theme toggle.
+### Changes
 
-### What will be built
+**Create `vercel.json`** in the project root:
+```json
+{
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
+```
 
-1. **Translation file** (`src/lib/translations.ts`) -- A dictionary object mapping keys to English and Swahili strings for all static UI text across pages (Navbar links, hero section, features, stats, footer, section headers, About page, etc.).
-
-2. **Language Context & Hook** (`src/hooks/useLanguage.tsx`) -- A `LanguageProvider` (wrapping the app in `App.tsx`) with:
-   - State: `"en" | "sw"`, persisted to `localStorage`
-   - `t(key)` function to retrieve translated string
-   - `toggleLanguage()` to switch between EN/SW
-
-3. **Language Toggle Component** (`src/components/LanguageToggle.tsx`) -- A small button showing "EN" or "SW" (or a flag icon) placed in the Navbar beside the theme toggle.
-
-4. **Updated components** -- Replace hardcoded English strings with `t("key")` calls in:
-   - `Navbar.tsx` (nav link names)
-   - `Index.tsx` (hero text, features, stats, CTA)
-   - `Footer.tsx` (section headers, tagline)
-   - `About.tsx` (profile text, mission, section titles)
-   - `SectionHeader.tsx` (pass translated props from parents)
-   - Other page headers (Courses, Tools, Videos, News, Contact)
-
-### Technical details
-
-- Pattern mirrors `useTheme` -- context + provider + hook
-- Storage key: `cyberninja-language`
-- Translation keys structured as `"nav.home"`, `"hero.title"`, `"features.securityTools"`, etc.
-- Components call `const { t } = useLanguage()` and render `t("key")` instead of literal strings
-- Dynamic content from the database (course titles, news, etc.) stays as-is (English only) -- only static UI strings are translated
+That's it — one file. After deploying with this config, all routes will be handled by React Router.
 
