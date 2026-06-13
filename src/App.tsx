@@ -9,6 +9,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { LanguageProvider } from "@/hooks/useLanguage";
 import LoadingScreen from "@/components/LoadingScreen";
+import ChatbotWidget from "@/components/ChatbotWidget";
 
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -56,6 +57,7 @@ const AppContent: React.FC = () => {
             <Route path="/admin" element={<Admin />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <ChatbotWidget />
         </AuthProvider>
       </BrowserRouter>
     </>
